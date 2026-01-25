@@ -22,13 +22,13 @@ public class WebController {
         return "index";
     }
 
-    @PostMapping("/book")
+   /* @PostMapping("/book")
     public String book(@RequestParam String name,
                        @RequestParam String date,
                        @RequestParam String time) {
         service.bookAppointment(name, date, time);
         return "redirect:/appointments";
-    }
+    }*/
 
    /* @GetMapping("/appointments")
     public String view(Model model) {
