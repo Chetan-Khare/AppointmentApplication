@@ -27,6 +27,20 @@ public class AppointmentService {
     // Inject the Repository to talk to the database
     @Autowired
     private AppointmentRepository appointmentRepository;
+    public void bookAppointment(Appointment appointment) throws Exception {
+        // 1. Check for Time Slot Collision
+        if ( appointmentRepository.existsByDateAndTime(appointment.getDate(), appointment.getTime())) {
+            throw new Exception("This time slot is already booked. Please choose another.");
+        }
+
+        // 2. Check for Duplicate Name on Same Day
+        if ( appointmentRepository.existsByPatientNameAndDate(appointment.getPatientName(), appointment.getDate())) {
+            throw new Exception("You already have an appointment booked for this day.");
+        }
+
+        // 3. If all clear, save the appointment
+        appointmentRepository.save(appointment);
+    }
 
     public List<Appointment> getWaitingQueue() {
         return appointmentRepository.findAll().stream()

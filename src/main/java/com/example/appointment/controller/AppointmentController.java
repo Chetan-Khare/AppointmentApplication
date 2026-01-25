@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import com.example.appointment.repository.AppointmentRepository;
@@ -27,6 +28,17 @@ public class AppointmentController {
 
         model.addAttribute("currentPatient", current);
         return "display"; // points to display.html
+    }
+    @PostMapping("/book")
+    public String book(@ModelAttribute Appointment appointment, Model model) {
+        try {
+            appointmentService.bookAppointment(appointment);
+            return "redirect:/appointments"; // Success!
+        } catch (Exception e) {
+            // Send the error message back to the form
+            model.addAttribute("errorMessage", e.getMessage());
+            return "index";
+        }
     }
 
     @Autowired

@@ -8,5 +8,8 @@ import org.springframework.stereotype.Repository;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     // That's it! No methods needed.
     // JpaRepository provides save(), findAll(), deleteById(), etc. automatically.
+    boolean existsByDateAndTime(String date, String time);
+    boolean existsByPatientNameAndDate(String patientName, String date);
+
     List<Appointment> findByStatus(String status);
 }
