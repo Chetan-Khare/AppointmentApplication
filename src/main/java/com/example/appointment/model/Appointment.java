@@ -16,7 +16,7 @@ public class Appointment {
     private String date;
     private String time;
 
-    private String status;
+    private String status="WAITING";
     private int tokenNumber;
 
     // 1. Mandatory No-Args Constructor (Hibernate needs this)

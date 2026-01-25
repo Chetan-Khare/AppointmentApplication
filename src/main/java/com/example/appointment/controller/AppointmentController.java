@@ -40,6 +40,18 @@ public class AppointmentController {
             return "index";
         }
     }
+    public void bookAppointment(Appointment appointment) {
+        // 1. Get total appointments for today to decide the next token
+        long count = appointmentRepository.count();
+        appointment.setTokenNumber((int) count + 1); // Starts at 1, then 2, etc.
+
+        // 2. Set default status if it's empty
+        if (appointment.getStatus() == null) {
+            appointment.setStatus("WAITING");
+        }
+
+        appointmentRepository.save(appointment);
+    }
 
     @Autowired
     private AppointmentService appointmentService;

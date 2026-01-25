@@ -32,18 +32,13 @@
             <tbody>
             <tr th:each="a : ${waitingList}">
                 <td><strong th:text="'#' + ${a.tokenNumber}"></strong></td>
-                <td th:text="${a.patientName}"></td>
-                <td th:text="${a.time}"></td>
+                <td th:text="${a.patientName}">Name</td> <td th:text="${a.time}">Time</td>
                 <td>
-                    <span th:if="${a.status == 'WAITING'}" class="badge rounded-pill bg-warning text-dark">Waiting</span>
-                    <span th:if="${a.status == 'IN_PROGRESS'}" class="badge rounded-pill bg-success">In Session</span>
+                    <span class="badge bg-warning text-dark" th:text="${a.status}">Waiting</span>
                 </td>
-                <td class="text-center">
-                    <form th:if="${a.status == 'WAITING'}" th:action="@{/queue/start/{id}(id=${a.id})}" method="post">
-                        <button type="submit" class="btn btn-sm btn-outline-primary">Call Patient</button>
-                    </form>
-                    <form th:if="${a.status == 'IN_PROGRESS'}" th:action="@{/queue/complete/{id}(id=${a.id})}" method="post">
-                        <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                <td>
+                    <form th:action="@{/queue/start/{id}(id=${a.id})}" method="post">
+                        <button type="submit" class="btn btn-sm btn-primary">Call Patient</button>
                     </form>
                 </td>
             </tr>

@@ -22,7 +22,7 @@ public class LoginController {
                         Model model) {
 
         // Simple hardcoded check for now
-        if ("doctor1".equals(username) && "password123".equals(password)) {
+        if ("doctor1".equals(username) && "doctor123".equals(password)) {
             return "redirect:/queue";
         } else {
             model.addAttribute("error", "Invalid Credentials! Please try again.");

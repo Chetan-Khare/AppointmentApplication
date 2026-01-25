@@ -28,26 +28,33 @@ public class AppointmentService {
     @Autowired
     private AppointmentRepository appointmentRepository;
     public void bookAppointment(Appointment appointment) throws Exception {
-        // 1. Check for Time Slot Collision
-        if ( appointmentRepository.existsByDateAndTime(appointment.getDate(), appointment.getTime())) {
+        // 1. Validation: Check for Time Slot Collision
+        if (appointmentRepository.existsByDateAndTime(appointment.getDate(), appointment.getTime())) {
             throw new Exception("This time slot is already booked. Please choose another.");
         }
 
-        // 2. Check for Duplicate Name on Same Day
-        if ( appointmentRepository.existsByPatientNameAndDate(appointment.getPatientName(), appointment.getDate())) {
+        // 2. Validation: Check for Duplicate Name on Same Day
+        if (appointmentRepository.existsByPatientNameAndDate(appointment.getPatientName(), appointment.getDate())) {
             throw new Exception("You already have an appointment booked for this day.");
         }
 
-        // 3. If all clear, save the appointment
+        // --- MISSING LOGIC ADDED HERE ---
+        // 3. Token Generation: Count existing records and add 1
+        long count = appointmentRepository.count();
+        appointment.setTokenNumber((int) count + 1);
+
+        // 4. Status Initialization: Ensure it starts as WAITING
+        appointment.setStatus("WAITING");
+        // --------------------------------
+
+        // 5. Save the appointment with the new Token and Status
         appointmentRepository.save(appointment);
     }
-
     public List<Appointment> getWaitingQueue() {
         return appointmentRepository.findAll().stream()
-                .filter(a -> "WAITING".equals(a.getStatus()))
+                .filter(a -> "WAITING".equals(a.getStatus()) || "IN_PROGRESS".equals(a.getStatus()))
                 .toList();
     }
-
 
     public void completeAppointment(Long id) {
         Appointment a =  appointmentRepository.findById(id).orElseThrow();
@@ -55,19 +62,7 @@ public class AppointmentService {
         appointmentRepository.save(a);
     }
 
-    public Appointment bookAppointment(String name, String date, String time) {
-        // ID is now handled automatically by @GeneratedValue in the Model
-        Appointment ap = new Appointment(null, name, date, time);
-        ap.setPatientName(name);
-        ap.setDate(date);
-        ap.setTime(time);
 
-        // Calculate token: total appointments today + 1
-        long count = appointmentRepository.count();
-        ap.setTokenNumber((int) count + 1);
-
-        return appointmentRepository.save(ap);
-    }
 
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll(); // Fetches all from Database
