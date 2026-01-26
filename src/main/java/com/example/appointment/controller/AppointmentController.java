@@ -1,5 +1,8 @@
 package com.example.appointment.controller;
 
+
+import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.GetMapping;
 import com.example.appointment.model.Appointment;
 import com.example.appointment.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,9 +75,22 @@ public class AppointmentController {
     }
 
     // 3. Action to "Call" a patient
-    @PostMapping("/queue/start/{id}")
-    public String startAppointment(@PathVariable Long id) {
-        appointmentService.startAppointment(id);
+    // Inside AppointmentController.java
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate(); // Clears the doctor's session
+        return "redirect:/login"; // Sends them back to the login page
+    }
+
+    @GetMapping("/start/{id}")
+    public String startAppointment(@PathVariable("id") Long id) {
+        try {
+            appointmentService.startAppointment(id);
+        } catch (Exception e) {
+            // Log error if any
+            System.out.println("Error: " + e.getMessage());
+        }
+        // This redirects back to the table so the status updates
         return "redirect:/queue";
     }
 }

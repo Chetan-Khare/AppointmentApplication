@@ -9,6 +9,13 @@ import java.util.List;
 
 @Service
 public class AppointmentService {
+    public void recallPatient(Long id) {
+        Appointment current = appointmentRepository.findById(id).orElse(null);
+        if (current != null) {
+            // Just broadcast again! This triggers the display.html announcement logic
+            messagingTemplate.convertAndSend("/topic/appointment", current);
+        }
+    }
    /* public void startAppointment(Long id) {
         // 1. Find the person who is currently 'IN_PROGRESS' and mark them 'COMPLETED'
         List<Appointment> currentlyActive = appointmentRepository.findByStatus("IN_PROGRESS");
