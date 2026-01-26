@@ -1,5 +1,5 @@
 package com.example.appointment.service;
-
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.example.appointment.model.Appointment;
 import com.example.appointment.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 public class AppointmentService {
-    public void startAppointment(Long id) {
+   /* public void startAppointment(Long id) {
         // 1. Find the person who is currently 'IN_PROGRESS' and mark them 'COMPLETED'
         List<Appointment> currentlyActive = appointmentRepository.findByStatus("IN_PROGRESS");
         for (Appointment active : currentlyActive) {
@@ -22,7 +22,7 @@ public class AppointmentService {
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
         nextPatient.setStatus("IN_PROGRESS");
         appointmentRepository.save(nextPatient);
-    }
+    }*/
 
     // Inject the Repository to talk to the database
     @Autowired
@@ -60,6 +60,30 @@ public class AppointmentService {
         Appointment a =  appointmentRepository.findById(id).orElseThrow();
         a.setStatus("COMPLETED");
         appointmentRepository.save(a);
+    }
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate; // Inject the "shouter"
+
+    public void startAppointment(Long id) {
+        // 1. Complete any previous patient
+        List<Appointment> currentlyActive = appointmentRepository.findByStatus("IN_PROGRESS");
+        for (Appointment active : currentlyActive) {
+            active.setStatus("COMPLETED");
+            appointmentRepository.save(active);
+        }
+
+        // 2. Start the NEW patient (Crucial step!)
+        Appointment current = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        current.setStatus("IN_PROGRESS"); // Mark them as the one currently with the doctor
+        appointmentRepository.save(current);
+
+        // 3. BROADCAST: Tell the WebSocket display who the new patient is
+        messagingTemplate.convertAndSend("/topic/appointment", current);
+
+        System.out.println("Broadcasting Token: " + current.getTokenNumber());
     }
 
 

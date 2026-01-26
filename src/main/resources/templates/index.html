@@ -12,6 +12,50 @@
     </style>
 </head>
 <body>
+<div id="chat-box" class="card shadow" style="position: fixed; bottom: 20px; right: 20px; width: 300px;">
+    <div class="card-header bg-dark text-white">Clinic Assistant</div>
+    <div id="chat-content" class="card-body" style="height: 200px; overflow-y: auto; font-size: 0.9rem;">
+    </div>
+    <div class="card-footer">
+        <div class="input-group">
+            <input type="text" id="user-msg" class="form-control" placeholder="Ask a question...">
+            <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+    var socket = new SockJS('/ws-appointment');
+    var stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        // Subscribe to the bot's responses
+        stompClient.subscribe('/topic/messages', function (response) {
+            var chatContent = document.getElementById('chat-content');
+            var newMessage = document.createElement('p');
+            newMessage.innerText = response.body;
+            chatContent.appendChild(newMessage);
+            chatContent.scrollTop = chatContent.scrollHeight; // Auto-scroll
+        });
+    });
+
+    function sendMessage() {
+        var msgInput = document.getElementById('user-msg');
+        // Send message to the /app/chat destination
+        stompClient.send("/app/chat", {}, msgInput.value);
+
+        // Also show user message in UI
+        var chatContent = document.getElementById('chat-content');
+        var userPara = document.createElement('p');
+        userPara.innerHTML = "<b>You:</b> " + msgInput.value;
+        chatContent.appendChild(userPara);
+
+        msgInput.value = ''; // Clear input
+    }
+</script>
 <div th:if="${errorMessage}" class="alert alert-danger shadow-sm mb-4" role="alert">
     <strong>⚠️ Oops!</strong> <span th:text="${errorMessage}">Error details here</span>
 </div>
