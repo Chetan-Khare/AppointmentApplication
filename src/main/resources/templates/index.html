@@ -12,14 +12,26 @@
     </style>
 </head>
 <body>
-<div id="chat-box" class="card shadow" style="position: fixed; bottom: 20px; right: 20px; width: 300px;">
-    <div class="card-header bg-dark text-white">Clinic Assistant</div>
-    <div id="chat-content" class="card-body" style="height: 200px; overflow-y: auto; font-size: 0.9rem;">
+<div id="chat-bubble" onclick="toggleChat()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;">
+    <span style="font-size: 30px; color: white;">💬</span>
+</div>
+
+<div id="chat-window" class="card shadow-lg" style="display: none; position: fixed; bottom: 100px; right: 30px; width: 350px; border-radius: 15px; overflow: hidden; z-index: 1000;">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0">🏥 Clinic Assistant</h6>
+        <button onclick="toggleChat()" class="btn-close btn-close-white" style="font-size: 0.8rem;"></button>
     </div>
-    <div class="card-footer">
+
+    <div id="chat-content" class="card-body bg-light" style="height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+        <div class="p-2 rounded bg-white shadow-sm align-self-start" style="max-width: 80%;">
+            Hello! I'm your clinic assistant. Ask me about wait times or status!
+        </div>
+    </div>
+
+    <div class="card-footer bg-white border-0">
         <div class="input-group">
-            <input type="text" id="user-msg" class="form-control" placeholder="Ask a question...">
-            <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            <input type="text" id="user-msg" class="form-control border-0 bg-light" placeholder="Type a message..." onkeypress="handleKey(event)">
+            <button class="btn btn-success" onclick="sendMessage()">➤</button>
         </div>
     </div>
 </div>
@@ -32,28 +44,35 @@
     var stompClient = Stomp.over(socket);
 
     stompClient.connect({}, function (frame) {
-        // Subscribe to the bot's responses
         stompClient.subscribe('/topic/messages', function (response) {
-            var chatContent = document.getElementById('chat-content');
-            var newMessage = document.createElement('p');
-            newMessage.innerText = response.body;
-            chatContent.appendChild(newMessage);
-            chatContent.scrollTop = chatContent.scrollHeight; // Auto-scroll
+            appendMessage(response.body, 'bot');
         });
     });
 
+    function toggleChat() {
+        const win = document.getElementById('chat-window');
+        win.style.display = win.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+
     function sendMessage() {
         var msgInput = document.getElementById('user-msg');
-        // Send message to the /app/chat destination
+        if (!msgInput.value.trim()) return;
+
+        appendMessage(msgInput.value, 'user');
         stompClient.send("/app/chat", {}, msgInput.value);
+        msgInput.value = '';
+    }
 
-        // Also show user message in UI
-        var chatContent = document.getElementById('chat-content');
-        var userPara = document.createElement('p');
-        userPara.innerHTML = "<b>You:</b> " + msgInput.value;
-        chatContent.appendChild(userPara);
-
-        msgInput.value = ''; // Clear input
+    function appendMessage(text, type) {
+        var content = document.getElementById('chat-content');
+        var div = document.createElement('div');
+        div.className = `p-2 rounded shadow-sm ${type === 'user' ? 'bg-primary text-white align-self-end' : 'bg-white align-self-start'}`;
+        div.style.maxWidth = "80%";
+        div.innerText = text;
+        content.appendChild(div);
+        content.scrollTop = content.scrollHeight;
     }
 </script>
 <div th:if="${errorMessage}" class="alert alert-danger shadow-sm mb-4" role="alert">
