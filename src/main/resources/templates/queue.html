@@ -171,16 +171,44 @@
             <span th:class="${a.status == 'IN_PROGRESS' ? 'status-pill status-active' : 'status-pill status-waiting'}"
                   th:text="${a.status}">WAITING</span>
                         </td>
-                        <td class="text-center">
-                            <a th:if="${a.status == 'WAITING'}"
-                               th:href="@{/start/{id}(id=${a.id})}"
-                               class="btn btn-call btn-sm">
-                                Call Patient
-                            </a>
-                            <div th:if="${a.status == 'IN_PROGRESS'}" class="d-flex align-items-center justify-content-center text-success fw-bold small">
-                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                In Cabin
-                            </div>
+                        <td class="align-middle">
+                            <div class="d-flex justify-content-between align-items-center w-100">
+
+                                <div style="min-width: 100px;"> <div th:if="${a.status == 'IN_PROGRESS'}"
+                                                                     class="badge bg-light text-success border border-success d-inline-flex align-items-center p-2">
+                                    <span class="spinner-grow spinner-grow-sm me-2" role="status"></span>
+                                    In Cabin
+                                </div>
+                                    <span th:if="${a.status == 'WAITING'}" class="text-muted small ms-2">Waiting...</span>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2">
+
+                                        <button class="btn btn-sm text-white fw-bold shadow-sm"
+                                                style="background: linear-gradient(135deg, #4e73df, #36b9cc); border: none;"
+                                                th:onclick="'startVideoCall(\'' + ${a.tokenNumber} + '\')'"
+                                                title="Start Video Consultation">
+                                            <i class="bi bi-camera-video-fill me-1"></i> Video Call
+                                        </button>
+                                        </button>
+
+                                        </div>
+
+                                    <a th:if="${a.status == 'WAITING'}"
+                                       th:href="@{/start/{id}(id=${a.id})}"
+                                       class="btn btn-warning btn-sm fw-bold shadow-sm">
+                                        <i class="bi bi-megaphone-fill"></i> Call Patient
+                                    </a>
+
+                                    <a th:if="${a.status == 'IN_PROGRESS'}"
+                                       th:href="@{/complete/{id}(id=${a.id})}"
+                                       class="btn btn-success btn-sm fw-bold shadow-sm">
+                                        <i class="bi bi-check-lg"></i> Complete
+                                    </a>
+                                </div>
+
+                         </div>
                         </td>
                     </tr>
 
@@ -243,6 +271,16 @@ function filterTable() {
         noResultsRow.style.display = (filter !== "" && visibleCount === 0) ? "table-row" : "none";
     }
 }
+</script>
+<script>
+    function startVideoCall(tokenNumber) {
+        // Creates a secure room like "Clinic-Token-101"
+        const roomName = "ClinicApp-Token-" + tokenNumber;
+        const domain = "meet.jit.si";
+
+        // Opens the video call in a new tab
+        window.open(`https://${domain}/${roomName}`, '_blank');
+    }
 </script>
 </body>
 </html>

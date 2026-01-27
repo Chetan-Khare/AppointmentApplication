@@ -1,6 +1,7 @@
 package com.example.appointment.service;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.example.appointment.model.Appointment;
+import java.util.stream.Collectors;
 import com.example.appointment.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,11 +63,17 @@ public class AppointmentService {
                 .filter(a -> "WAITING".equals(a.getStatus()) || "IN_PROGRESS".equals(a.getStatus()))
                 .toList();
     }
+    public List<Appointment> getCompletedAppointments() {
+        return appointmentRepository.findAll().stream()
+                .filter(a -> "COMPLETED".equals(a.getStatus()))
+                .collect(Collectors.toList());
+    }
 
     public void completeAppointment(Long id) {
         Appointment a =  appointmentRepository.findById(id).orElseThrow();
         a.setStatus("COMPLETED");
         appointmentRepository.save(a);
+
     }
 
     @Autowired

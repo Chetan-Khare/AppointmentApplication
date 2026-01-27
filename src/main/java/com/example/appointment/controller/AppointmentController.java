@@ -32,6 +32,21 @@ public class AppointmentController {
         model.addAttribute("currentPatient", current);
         return "display"; // points to display.html
     }
+    // 1. This makes the HISTORY button work
+    @GetMapping("/history")
+    public String viewHistory(Model model) {
+        // Matches the method name in your existing Service
+        model.addAttribute("historyList", appointmentService.getCompletedAppointments());
+        return "history";
+    }
+
+    // 2. This makes the COMPLETE button work
+    @GetMapping("/complete/{id}")
+    public String completeAppointment(@PathVariable Long id) {
+        // Matches the method name in your existing Service
+        appointmentService.completeAppointment(id);
+        return "redirect:/queue";
+    }
     @PostMapping("/book")
     public String book(@ModelAttribute Appointment appointment, Model model) {
         try {
