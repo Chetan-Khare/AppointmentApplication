@@ -12,10 +12,16 @@
     </style>
 </head>
 <body>
-<div id="chat-bubble" onclick="toggleChat()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;">
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm bg-white">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="/">
+            <span class="fw-bold text-dark" style="letter-spacing: -1px; font-size: 1.6rem;">
+                Appointment Mangement System <span class="text-primary">Portal</span>
+            </span>
+        </a>
+    </div> </nav> <div id="chat-bubble" onclick="toggleChat()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;">
     <span style="font-size: 30px; color: white;">💬</span>
 </div>
-
 <div id="chat-window" class="card shadow-lg" style="display: none; position: fixed; bottom: 100px; right: 30px; width: 350px; border-radius: 15px; overflow: hidden; z-index: 1000;">
     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
         <h6 class="mb-0">🏥 Clinic Assistant</h6>
