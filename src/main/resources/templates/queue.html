@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -116,7 +117,9 @@
                 <span class="fw-bold text-dark d-block" style="font-size: 0.95rem;">Dr. xyz</span>
                 <small class="text-success fw-bold" style="font-size: 0.75rem;">● System Online</small>
             </div>
-            <a href="/history" class="btn btn-call btn-sm">
+
+
+            <a href="/appointments" class="btn btn-call btn-sm">
                 <i class="bi bi-clock-history"></i> View History
             </a>
 
@@ -140,90 +143,100 @@
     <div class="card dashboard-card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead>
+                <table class="table align-middle mb-0 table-hover">
+                    <thead class="table-light">
                     <tr>
                         <th class="ps-4">Token</th>
                         <th>Patient Information</th>
                         <th>Time Slot</th>
-                        <th>Status</th>
+                        <th>Payment</th> <th>Status</th>
                         <th class="text-center">Action</th>
                     </tr>
                     </thead>
                     <tbody id="patientTableBody">
                     <tr th:each="a : ${waitingList}" class="patient-row">
+
                         <td class="ps-4 fw-bold text-primary">
-            <span class="badge rounded-pill bg-light text-primary border border-primary px-3 py-2">
-                #<span th:text="${a.tokenNumber}">101</span>
-            </span>
+                <span class="badge rounded-pill bg-light text-primary border border-primary px-3 py-2">
+                    #<span th:text="${a.tokenNumber}">101</span>
+                </span>
                         </td>
+
                         <td>
                             <div class="fw-bold text-dark" th:text="${a.patientName}">Patient Name</div>
                             <div class="text-muted small" th:text="${a.date}">2026-01-26</div>
                         </td>
+
                         <td>
                             <div class="d-flex align-items-center">
                                 <span class="me-2 text-primary">🕒</span>
                                 <span th:text="${a.time}">09:00 AM</span>
                             </div>
                         </td>
+
                         <td>
-            <span th:class="${a.status == 'IN_PROGRESS' ? 'status-pill status-active' : 'status-pill status-waiting'}"
-                  th:text="${a.status}">WAITING</span>
+                            <div th:if="${a.paymentStatus == 'PAID'}">
+                    <span class="badge bg-success rounded-pill shadow-sm">
+                        <i class="bi bi-check-circle-fill me-1"></i> PAID
+                    </span>
+                                <div class="text-muted small" th:if="${a.paymentMode == 'ONLINE'}">Online</div>
+                                <div class="text-muted small" th:if="${a.paymentMode == 'CASH'}">Cash Received</div>
+                            </div>
+
+                            <div th:if="${a.paymentStatus != 'PAID'}">
+                                <span class="badge bg-danger rounded-pill mb-1">Unpaid</span>
+                                <div>
+                                    <a th:href="@{/markPaid/{id}(id=${a.id})}"
+                                       class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm"
+                                       onclick="return confirm('Confirm cash payment received?')"
+                                       style="font-size: 0.8rem;">
+                                        <i class="bi bi-cash-coin"></i> Collect
+                                    </a>
+                                </div>
+                            </div>
                         </td>
+
+                        <td>
+                <span th:class="${a.status == 'IN_PROGRESS' ? 'badge bg-primary' : 'badge bg-warning text-dark'}"
+                      th:text="${a.status}">WAITING</span>
+                        </td>
+
                         <td class="align-middle">
-                            <div class="d-flex justify-content-between align-items-center w-100">
+                            <div class="d-flex justify-content-end gap-2">
 
-                                <div style="min-width: 100px;"> <div th:if="${a.status == 'IN_PROGRESS'}"
-                                                                     class="badge bg-light text-success border border-success d-inline-flex align-items-center p-2">
-                                    <span class="spinner-grow spinner-grow-sm me-2" role="status"></span>
-                                    In Cabin
-                                </div>
-                                    <span th:if="${a.status == 'WAITING'}" class="text-muted small ms-2">Waiting...</span>
-                                </div>
+                                <button class="btn btn-sm text-white fw-bold shadow-sm"
+                                        style="background: linear-gradient(135deg, #4e73df, #36b9cc); border: none;"
+                                        th:onclick="'startVideoCall(\'' + ${a.tokenNumber} + '\')'"
+                                        title="Start Video Consultation">
+                                    <i class="bi bi-camera-video-fill"></i>Video
+                                </button>
 
-                                <div class="d-flex gap-2">
-                                    <div class="d-flex gap-2">
+                                <a th:if="${a.status == 'WAITING'}"
+                                   th:href="@{/start/{id}(id=${a.id})}"
+                                   class="btn btn-warning btn-sm fw-bold shadow-sm text-dark">
+                                    <i class="bi bi-megaphone-fill"></i> Call
+                                </a>
 
-                                        <button class="btn btn-sm text-white fw-bold shadow-sm"
-                                                style="background: linear-gradient(135deg, #4e73df, #36b9cc); border: none;"
-                                                th:onclick="'startVideoCall(\'' + ${a.tokenNumber} + '\')'"
-                                                title="Start Video Consultation">
-                                            <i class="bi bi-camera-video-fill me-1"></i> Video Call
-                                        </button>
-                                        </button>
-
-                                        </div>
-
-                                    <a th:if="${a.status == 'WAITING'}"
-                                       th:href="@{/start/{id}(id=${a.id})}"
-                                       class="btn btn-warning btn-sm fw-bold shadow-sm">
-                                        <i class="bi bi-megaphone-fill"></i> Call Patient
-                                    </a>
-
-                                    <a th:if="${a.status == 'IN_PROGRESS'}"
-                                       th:href="@{/complete/{id}(id=${a.id})}"
-                                       class="btn btn-success btn-sm fw-bold shadow-sm">
-                                        <i class="bi bi-check-lg"></i> Complete
-                                    </a>
-                                </div>
-
-                         </div>
+                                <a th:if="${a.status == 'IN_PROGRESS'}"
+                                   th:href="@{/complete/{id}(id=${a.id})}"
+                                   class="btn btn-success btn-sm fw-bold shadow-sm">
+                                    <i class="bi bi-check-lg"></i> Done
+                                </a>
+                            </div>
                         </td>
                     </tr>
 
                     <tr id="noResultsRow" style="display: none;">
-                        <td colspan="5" class="text-center py-5">
+                        <td colspan="6" class="text-center py-5">
                             <div class="text-muted">
                                 <div style="font-size: 3rem;">🔎</div>
                                 <h5 class="mt-3">No matching patients found</h5>
-                                <p class="text-muted small">Try checking the spelling or clear the search.</p>
                             </div>
                         </td>
                     </tr>
 
                     <tr th:if="${#lists.isEmpty(waitingList)}" id="emptyQueueRow">
-                        <td colspan="5" class="text-center py-5 text-muted">
+                        <td colspan="6" class="text-center py-5 text-muted">
                             <div style="font-size: 3rem;">📑</div>
                             <h5 class="mt-3">Your queue is currently empty.</h5>
                             <p class="text-muted small">Confirmed bookings will appear here instantly.</p>

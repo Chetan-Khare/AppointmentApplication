@@ -1,15 +1,18 @@
 package com.example.appointment.repository;
 import java.util.List;
+import java.time.LocalDate;
 import com.example.appointment.model.Appointment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
+
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
     // That's it! No methods needed.
     // JpaRepository provides save(), findAll(), deleteById(), etc. automatically.
-    boolean existsByDateAndTime(String date, String time);
-    boolean existsByPatientNameAndDate(String patientName, String date);
+    boolean existsByDateAndTime(LocalDate date, String time);
+    boolean existsByPatientNameAndDate(String patientName, LocalDate date);
 
     List<Appointment> findByStatus(String status);
+    List<Appointment> findByDate(LocalDate date);
 }
