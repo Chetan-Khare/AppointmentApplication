@@ -4,6 +4,7 @@ import com.example.appointment.model.Appointment;
 import com.example.appointment.repository.AppointmentRepository;
 import com.example.appointment.service.AppointmentService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -40,6 +41,12 @@ public class AppointmentController {
 
         return "index"; // Matches your index.html
     }
+    @GetMapping("/receipt/{id}")
+    public String showReceipt(@PathVariable Long id, Model model) {
+        Appointment appt = appointmentRepository.findById(id).orElse(null);
+        model.addAttribute("appt", appt);
+        return "receipt";
+    }
 
     @PostMapping("/book")
     public String bookAppointment(@ModelAttribute Appointment appointment, RedirectAttributes ra) {
@@ -73,8 +80,9 @@ public class AppointmentController {
                 ra.addFlashAttribute("message", "Booking Confirmed! Please pay at the counter.");
                 ra.addFlashAttribute("token", appointment.getTokenNumber());
 
-                return "redirect:/";
+                return "redirect:/receipt/" + appointment.getId();
             }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,7 +123,7 @@ public class AppointmentController {
             ra.addFlashAttribute("message", "Payment Successful! You are now in the queue.");
             ra.addFlashAttribute("token", appt.getTokenNumber());
         }
-        return "redirect:/";
+        return "redirect:/receipt/" + id;
     }
 
     // --- 2. DOCTOR SIDE: Dashboard & Actions ---
@@ -135,6 +143,24 @@ public class AppointmentController {
         }
         return "redirect:/queue";
     }
+    // 1. Cancel Appointment
+    @GetMapping("/cancel/{id}")
+    public String cancelAppointment(@PathVariable Long id) {
+        Appointment appt = appointmentRepository.findById(id).get();
+        appt.setStatus("CANCELLED");
+        appointmentRepository.save(appt);
+        return "redirect:/queue";
+    }
+
+    // 2. Save Prescription
+    @PostMapping("/prescription")
+    public String savePrescription(@RequestParam Long id, @RequestParam String notes) {
+        Appointment appt = appointmentRepository.findById(id).get();
+        appt.setPrescription(notes);
+        appt.setStatus("COMPLETED"); // Auto-complete when Rx is given
+        appointmentRepository.save(appt);
+        return "redirect:/queue";
+    }
 
     @GetMapping("/complete/{id}")
     public String completeAppointment(@PathVariable Long id) {
@@ -149,9 +175,8 @@ public class AppointmentController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/login";
+    public String logout() {
+        return "redirect:/login?logout";
     }
 
     // --- 3. PUBLIC DISPLAY (TV Screen) ---

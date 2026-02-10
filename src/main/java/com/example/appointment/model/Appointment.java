@@ -6,9 +6,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
+import jakarta.persistence.Column;
 @Entity
 public class Appointment {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,6 +36,16 @@ public class Appointment {
         this.date = date;
         this.time = time;
         this.status = "WAITING";
+    }
+    @Column(length = 5000) // Allows long notes
+    private String prescription;
+
+
+    public String getPrescription() {
+        return prescription;
+    }
+    public void setPrescription(String prescription) {
+        this.prescription = prescription;
     }
 
     // --- GETTERS AND SETTERS ---
