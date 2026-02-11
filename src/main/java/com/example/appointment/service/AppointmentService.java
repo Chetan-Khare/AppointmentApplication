@@ -17,20 +17,6 @@ public class AppointmentService {
             messagingTemplate.convertAndSend("/topic/appointment", current);
         }
     }
-   /* public void startAppointment(Long id) {
-        // 1. Find the person who is currently 'IN_PROGRESS' and mark them 'COMPLETED'
-        List<Appointment> currentlyActive = appointmentRepository.findByStatus("IN_PROGRESS");
-        for (Appointment active : currentlyActive) {
-            active.setStatus("COMPLETED");
-            appointmentRepository.save(active);
-        }
-
-        // 2. Now, take the new patient and set them to 'IN_PROGRESS'
-        Appointment nextPatient = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
-        nextPatient.setStatus("IN_PROGRESS");
-        appointmentRepository.save(nextPatient);
-    }*/
 
     // Inject the Repository to talk to the database
     @Autowired

@@ -1,54 +1,59 @@
 package com.example.appointment.config;
 
+import com.example.appointment.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
 
+    // 1. Inject your Custom Database Service
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        // 1. Add WebSocket paths to the permitAll list
-                        .requestMatchers("/","/register/**", "/book", "/payment/**","/receipt/**","/display", "/css/**", "/js/**").permitAll()
-                        .requestMatchers("/ws-appointment/**").permitAll() // <--- ADD THIS LINE
+                .authenticationProvider(authenticationProvider()) // Connect the DB Service
 
-                        // 2. Dashboard protection
-                        .requestMatchers("/queue", "/appointments", "/start/**", "/complete/**","/cancel/**", "/prescription/**").hasRole("DOCTOR")
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**").disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/register/**", "/login", "/book", "/payment/**", "/receipt/**", "/display", "/css/**", "/js/**", "/ws-appointment/**", "/h2-console/**", "/error").permitAll()
+
+                        // Doctor Only Pages
+                        .requestMatchers("/queue", "/appointments", "/start/**", "/complete/**", "/cancel/**", "/prescription/**").hasRole("DOCTOR")
+
+                        // Everything else requires login
                         .anyRequest().authenticated()
                 )
-
-                .formLogin(form -> form.loginPage("/login").defaultSuccessUrl("/queue", true).permitAll())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/default", true)
+                        .permitAll()
+                )
                 .logout(logout -> logout.logoutSuccessUrl("/"));
-
 
         return http.build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // This hashes your passwords securely!
+        return new BCryptPasswordEncoder();
     }
 
+    // 2. This is the Bridge: It connects Spring Security to YOUR Database Service
     @Bean
-    public UserDetailsService userDetailsService() {
-        // Replace "doctor1" with a strong password. It will be hashed automatically.
-        UserDetails doctor = User.builder()
-                .username("doctor_admin")
-                .password(passwordEncoder().encode("SecurePass2026!"))
-                .roles("DOCTOR")
-                .build();
-
-        return new InMemoryUserDetailsManager(doctor);
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
+        auth.setUserDetailsService(customUserDetailsService); // Use DB, not RAM
+        auth.setPasswordEncoder(passwordEncoder());
+        return auth;
     }
 }

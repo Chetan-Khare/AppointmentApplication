@@ -31,8 +31,8 @@
       <tbody>
       <tr th:each="appt : ${appointments}">
         <td th:text="${appt.tokenNumber}">101</td>
-        <td th:text="${appt.date}">2026-02-10</td>
-        <td th:text="${appt.patientName}">John Doe</td>
+        <td th:text="${appt.date}">YYYY-MM-DD</td>
+        <td th:text="${appt.patientName}">Patient Name</td>
 
         <td>
                 <span th:class="${appt.status == 'COMPLETED' ? 'badge bg-success' : 'badge bg-secondary'}"
