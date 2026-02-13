@@ -3,7 +3,6 @@ package com.example.appointment.controller;
 import com.example.appointment.model.Appointment;
 import com.example.appointment.repository.AppointmentRepository;
 import com.example.appointment.service.AppointmentService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -125,15 +123,6 @@ public class AppointmentController {
         }
         return "redirect:/receipt/" + id;
     }
-
-    // --- 2. DOCTOR SIDE: Dashboard & Actions ---
-
-    @GetMapping("/queue")
-    public String viewQueue(Model model) {
-        model.addAttribute("waitingList", appointmentService.getWaitingQueue());
-        return "queue";
-    }
-
     @GetMapping("/start/{id}")
     public String startAppointment(@PathVariable("id") Long id) {
         try {

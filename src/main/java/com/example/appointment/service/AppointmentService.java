@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import com.example.appointment.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -17,7 +16,6 @@ public class AppointmentService {
             messagingTemplate.convertAndSend("/topic/appointment", current);
         }
     }
-
     // Inject the Repository to talk to the database
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -54,14 +52,12 @@ public class AppointmentService {
                 .filter(a -> "COMPLETED".equals(a.getStatus()))
                 .collect(Collectors.toList());
     }
-
     public void completeAppointment(Long id) {
         Appointment a =  appointmentRepository.findById(id).orElseThrow();
         a.setStatus("COMPLETED");
         appointmentRepository.save(a);
 
     }
-
     @Autowired
     private SimpMessagingTemplate messagingTemplate; // Inject the "shouter"
 
@@ -85,13 +81,9 @@ public class AppointmentService {
 
         System.out.println("Broadcasting Token: " + current.getTokenNumber());
     }
-
-
-
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll(); // Fetches all from Database
     }
-
     // Changed 'int' to 'Long' to match the database ID type
     public boolean cancelAppointment(Long id) {
         if (appointmentRepository.existsById(id)) {

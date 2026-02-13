@@ -22,32 +22,32 @@ public class ChatController {
             long count = repository.findAll().stream()
                     .filter(a -> "WAITING".equals(a.getStatus()))
                     .count();
-            return "Bot: There are currently " + count + " patients waiting in the queue.";
+            return "Clinic Bot: There are currently " + count + " patients waiting in the queue.";
         }
 
         // 2. Check for Wait Times
         else if (userMessage.contains("wait")) {
-            return "Bot: The average wait time today is about 15 minutes per patient.";
+            return "Clinic Bot: The average wait time today is about 15 minutes per patient.";
         }
 
         // 3. Check for Hours
         else if (userMessage.contains("time") || userMessage.contains("open")) {
-            return "Bot: We are open from 9:00 AM to 6:00 PM.";
+            return "Clinic Bot: We are open from 9:00 AM to 6:00 PM.";
         }
 
         // 4. Greetings
         else if (userMessage.contains("hello") || userMessage.contains("hi")) {
-            return "Bot: Hello! How can I help you with your appointment today?";
+            return "Clinic Bot: Hello! How can I help you with your appointment today?";
         }
 
         // 5. Help Menu
         else if (userMessage.contains("help")) {
-            return "Bot: You can ask me about 'waiting status', 'opening hours', or 'average wait'.";
+            return "Clinic Bot: You can ask me about 'waiting status', 'opening hours', or 'average wait'.";
         }
 
         // 6. Default Fallback
         else {
-            return "Bot: I'm not sure about that. Type 'help' to see what I can answer, or ask to speak with our receptionist!";
+            return "Clinic Bot: I'm not sure about that. Type 'help' to see what I can answer, or ask to speak with our receptionist!";
         }
     }
 }
