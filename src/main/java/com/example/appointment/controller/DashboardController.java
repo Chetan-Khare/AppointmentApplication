@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class DashboardController {
@@ -31,19 +32,20 @@ public class DashboardController {
         }
         return "redirect:/dashboard";
     }
-
-
-    // 2. The Patient Dashboard
     @GetMapping("/dashboard")
-    public String showPatientDashboard(Model model, Principal principal) {
-        String email = principal.getName(); // Get logged-in email
+    public String showDashboard(Model model, Principal principal) {
+        String email = principal.getName();
+
+        // 1. Fetch User Details (For "Welcome, Name")
         User user = userRepository.findByEmail(email);
 
-        // Find appointments for this specific email only
-        List<Appointment> myAppointments = appointmentRepository.findByPatientEmail(email);
+        // 2. Fetch Appointments (For the table)
+        List<Appointment> list = appointmentRepository.findByPatientEmail(email);
 
+        // 3. Send data to HTML
         model.addAttribute("user", user);
-        model.addAttribute("appointments", myAppointments);
-        return "patient_dashboard";
+        model.addAttribute("appointments", list);
+
+        return "patient_dashboard"; // This must match your HTML filename
     }
 }
