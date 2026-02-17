@@ -41,9 +41,9 @@ public class AuthController {
         return "redirect:/register?success";
     }
 
-    // 3. Login Page (Optional, if you want a custom one)
+
     @GetMapping("/login")
     public String login() {
-        return "login"; // You need to create login.html
+        return "login";
     }
 }

@@ -7,33 +7,46 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <style>
-        body { background-color: #f4f7f6; }
-        .booking-card { max-width: 500px; margin: 50px auto; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .bg-clinic { background-color: #2c3e50 !important; }
-        .btn-clinic { background-color: #2c3e50; border: none; color: white; }
-        .btn-clinic:hover { background-color: #1a252f; color: white; }
+        /* 1. REMOVE HARDCODED BODY COLOR */
+        /* Let Bootstrap handle the background color via data-bs-theme */
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
 
+        .booking-card { max-width: 500px; margin: 50px auto; border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+        /* 2. Chat Window Styles */
         #chat-window { border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); overflow: hidden; }
         .chat-header-gradient { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
-        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; }
+        .chat-input-area { padding: 15px; border-top: 1px solid #eee; }
+
+        /* Ensure chat input area adapts to dark mode */
+        [data-bs-theme="dark"] .chat-input-area { background-color: #212529; border-top: 1px solid #495057; }
+        [data-bs-theme="dark"] .chat-input-pill { background-color: #2b3035; border: 1px solid #495057; color: white; }
+        [data-bs-theme="dark"] #chat-content { background-color: #343a40; }
+
         .chat-input-pill { background: #f4f7f6; border-radius: 30px; padding: 5px 15px; border: 1px solid #e0e0e0; }
         #chat-content { scroll-behavior: smooth; background-color: #f8f9fa; }
     </style>
 </head>
-<body>
+<body class="bg-body-tertiary">
 
-<nav class="navbar navbar-expand-lg sticky-top shadow-sm bg-white">
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm bg-body">
     <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="/">
-            <span class="fw-bold text-dark" style="letter-spacing: -1px; font-size: 1.6rem;">
+            <span class="fw-bold text-body" style="letter-spacing: -1px; font-size: 1.6rem;">
                 Appointment Booking <span class="text-primary">Portal</span>
             </span>
         </a>
+
+        <button class="btn btn-outline-secondary rounded-circle" onclick="toggleDarkMode()">
+            <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+        </button>
     </div>
 </nav>
 
 <div class="container">
-    <div class="card booking-card">
+    <div class="card booking-card shadow-lg">
         <div class="card-header bg-primary text-white text-center rounded-top">
             <h3 class="mb-0">🏥 Patient Booking</h3>
         </div>
@@ -50,21 +63,23 @@
                     <input type="email" name="patientEmail" class="form-control" placeholder="Enter your Email" required>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Date</label>
-                        <input type="date" name="date" class="form-control" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Time</label>
-                        <input type="time" name="time" class="form-control" required>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Select Date</label>
+                    <input type="date" name="date" class="form-control" id="dateInput" required>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Available Slots</label>
+                    <input type="hidden" name="time" id="selectedTime" required>
+
+                    <div id="slot-container" class="d-flex flex-wrap gap-2">
+                        <small class="text-muted">Select a date first...</small>
                     </div>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold text-secondary">Payment Method</label>
                     <div class="d-flex gap-3">
-
                         <div class="form-check flex-fill p-0">
                             <input type="radio" class="btn-check" name="paymentMode" id="pay-cash" value="CASH" checked>
                             <label class="btn btn-outline-success w-100 p-3 text-start" for="pay-cash">
@@ -82,14 +97,13 @@
                                 <div class="small text">UPI / Card</div>
                             </label>
                         </div>
-
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">Confirm Booking</button>
             </form>
         </div>
 
-        <div class="card-footer text-center bg-white">
+        <div class="card-footer text-center bg-body">
             <div class="d-flex justify-content-around">
                 <a href="/login" class="text-decoration-none small">Login</a>
                 <a href="/display" target="_blank" class="text-decoration-none small">Live Display</a>
@@ -139,6 +153,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
 <script>
+    // 1. WEBSOCKET CHAT LOGIC
     var socket = new SockJS('/ws-appointment');
     var stompClient = Stomp.over(socket);
 
@@ -181,6 +196,80 @@
         if (token) {
             window.open(`https://meet.jit.si/ClinicRoom-${token.trim()}`, '_blank');
         }
+    }
+
+    // 2. SMART SLOT FETCHING
+    document.getElementById('dateInput').addEventListener('change', function() {
+        fetchSlots(this.value);
+    });
+
+    // REPLACE your existing fetchSlots function with this one
+    function fetchSlots(date) {
+        const container = document.getElementById('slot-container');
+        container.innerHTML = '<small class="text-muted">Loading slots...</small>';
+
+        fetch('/api/slots?date=' + date)
+            .then(res => res.json())
+            .then(slots => {
+                container.innerHTML = '';
+
+                // --- NEW: Client-Side Time Filter ---
+                const today = new Date();
+                // Create a "YYYY-MM-DD" string for today to match the input
+                const todayStr = today.getFullYear() + '-' +
+                                 String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                                 String(today.getDate()).padStart(2, '0');
+
+                // If the user selected TODAY, filter out past times
+                if (date === todayStr) {
+                    const currentMinutes = today.getHours() * 60 + today.getMinutes();
+
+                    slots = slots.filter(time => {
+                        // Convert "09:30" to minutes (e.g., 9*60 + 30 = 570)
+                        const [h, m] = time.split(':').map(Number);
+                        const slotMinutes = h * 60 + m;
+                        return slotMinutes > currentMinutes; // Only keep future times
+                    });
+                }
+                // ------------------------------------
+
+                if(slots.length === 0) {
+                    container.innerHTML = '<span class="text-danger">No slots available</span>';
+                    return;
+                }
+
+                slots.forEach(time => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-outline-primary btn-sm'; // Bootstrap classes
+                    btn.innerText = time;
+                    btn.onclick = function() {
+                        // Visual: highlight active button
+                        document.querySelectorAll('#slot-container button').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        // Logic: set the hidden input value
+                        document.getElementById('selectedTime').value = time;
+                    };
+                    container.appendChild(btn);
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = '<span class="text-danger">Error loading slots</span>';
+            });
+    }
+
+    // 3. DARK MODE TOGGLE (FIXED)
+    function toggleDarkMode() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-bs-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+
+        html.setAttribute('data-bs-theme', next);
+
+        // Update Icon
+        const icon = document.getElementById('theme-icon');
+        icon.className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
     }
 </script>
 </body>

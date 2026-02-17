@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctors Portal | Patient Queue</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* --- YOUR EXACT CSS FROM QUEUE.HTML --- */
+        :root { --primary-color: #4e73df; --bg-color: #f8f9fc; }
+        body { background-color: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #2e3b4e; }
+        .navbar { background: #ffffff; border-bottom: 2px solid #e3e6f0; padding: 0.8rem 0; }
+        .search-container { max-width: 500px; }
+        .search-group { background: #f1f3f9; border: 1px solid #d1d3e2; transition: all 0.2s ease-in-out; }
+        .search-group:focus-within { background: #fff; border-color: var(--primary-color); box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15); }
+        .dashboard-card { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); background: white; }
+        .table thead { background-color: #f8f9fc; }
+        .table thead th { font-size: 0.8rem; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; padding: 1.2rem 1rem; border-bottom: 2px solid #e3e6f0; }
+        .table tbody tr { transition: background 0.2s; }
+        .table tbody tr:hover { background-color: #fcfdfe; }
+        .btn-call { background-color: var(--primary-color); color: white; border-radius: 8px; font-weight: 600; padding: 0.5rem 1.2rem; text-decoration: none; transition: 0.3s; display: inline-block; }
+        .btn-call:hover { background-color: #2e59d9; color: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand" href="#">
+            <span class="fw-bold text-dark" style="letter-spacing: -1px; font-size: 1.6rem;">
+                Doctor's <span class="text-primary">Portal</span>
+            </span>
+        </a>
+
+        <div class="flex-grow-1 mx-4 d-none d-md-block search-container">
+            <div class="input-group input-group-sm search-group rounded-pill px-3">
+                <span class="input-group-text bg-transparent border-0 text-muted">🔍</span>
+                <input type="text" id="patientSearch" class="form-control border-0 bg-transparent py-2" placeholder="Find patient name..." onkeyup="filterTable()">
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-none d-md-block text-end">
+                <span class="fw-bold text-dark d-block" style="font-size: 0.95rem;"th:text="${doctorName}">Dr. Chetan</span>
+                <small class="text-success fw-bold" style="font-size: 0.75rem;">● System Online</small>
+            </div>
+
+            <a href="/appointments" class="btn btn-call btn-sm">
+                <i class="bi bi-clock-history"></i> History
+            </a>
+
+            <a href="/login" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">Live Queue Management</h2>
+            <p class="text-muted mb-0">Today's appointments for <span class="fw-semibold text-primary" th:text="${#calendars.format(#calendars.createNow(), 'dd MMMM yyyy')}">Date</span></p>
+        </div>
+        <div class="text-muted small bg-white px-3 py-2 rounded-pill border shadow-sm d-flex align-items-center">
+            <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></div>
+            Syncing: <span class="fw-bold text-dark ms-1">Real-time</span>
+        </div>
+    </div>
+
+    <div class="card dashboard-card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Token</th>
+                        <th>Patient Name</th>
+                        <th>Time</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="patientTableBody">
+
+                    <tr th:each="a : ${appointments}" class="patient-row">
+
+                        <td class="ps-4 fw-bold text-primary">
+                            <span class="badge rounded-pill bg-light text-primary border border-primary px-3 py-2">
+                                #<span th:text="${a.tokenNumber}">101</span>
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="fw-bold text-dark" th:text="${a.patientName}">Name</div>
+                            <div class="text-muted small" th:text="${a.date}">Date</div>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2 text-primary">🕒</span>
+                                <span th:text="${a.time}">Time</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div th:if="${a.paymentStatus == 'PAID'}">
+                                <span class="badge bg-success rounded-pill shadow-sm"><i class="bi bi-check-circle-fill me-1"></i> PAID</span>
+                            </div>
+                            <div th:if="${a.paymentStatus != 'PAID'}">
+                                <span class="badge bg-danger rounded-pill mb-1">Unpaid</span>
+                                <a th:href="@{/markPaid/{id}(id=${a.id})}" class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm" style="font-size: 0.8rem;">
+                                    <i class="bi bi-cash-coin"></i> Collect
+                                </a>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span th:class="${a.status == 'IN_PROGRESS' ? 'badge bg-primary' : 'badge bg-warning text-dark'}" th:text="${a.status}">WAITING</span>
+                        </td>
+
+                        <td class="align-middle">
+                            <div class="d-flex justify-content-end gap-2">
+
+                                <button th:if="${a.status == 'WAITING'}"
+                                        class="btn btn-warning btn-sm fw-bold shadow-sm text-dark"
+                                        th:onclick="'callPatient(' + ${a.id} + ')'">
+                                    <i class="bi bi-megaphone-fill"></i> Call
+                                </button>
+
+                                <button th:if="${a.status == 'IN_PROGRESS'}"
+                                        type="button" class="btn btn-sm btn-success fw-bold shadow-sm"
+                                        data-bs-toggle="modal" th:data-bs-target="'#rxModal-' + ${a.id}">
+                                    <i class="bi bi-prescription2"></i> Rx
+                                </button>
+
+                                <button class="btn btn-sm text-white fw-bold shadow-sm"
+                                        style="background: linear-gradient(135deg, #4e73df, #36b9cc); border: none;"
+                                        th:onclick="'startVideoCall(\'' + ${a.tokenNumber} + '\')'">
+                                    <i class="bi bi-camera-video-fill"></i>
+                                </button>
+
+                                <a th:if="${a.status != 'COMPLETED'}" th:href="@{/cancel/{id}(id=${a.id})}" class="btn btn-sm btn-outline-danger ms-1">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
+                            </div>
+
+                            <div class="modal fade" th:id="'rxModal-' + ${a.id}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title">Rx: <span th:text="${a.patientName}"></span></h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form action="/doctor/prescribe" method="post">
+                                            <div class="modal-body text-start">
+                                                <input type="hidden" name="id" th:value="${a.id}">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Doctor's Notes & Medicines</label>
+                                                    <textarea name="notes" class="form-control" rows="5" required th:text="${a.prescription}"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Save & Email</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        const input = document.getElementById("patientSearch");
+        const filter = input.value.toLowerCase();
+        const rows = document.querySelectorAll("tr.patient-row");
+        rows.forEach(row => {
+            const nameCell = row.getElementsByTagName("td")[1];
+            if (nameCell) {
+                const nameText = nameCell.textContent || nameCell.innerText;
+                row.style.display = nameText.toLowerCase().includes(filter) ? "" : "none";
+            }
+        });
+    }
+
+    // NEW: Function to Call Patient via API
+    function callPatient(id) {
+        fetch('/doctor/call?id=' + id, { method: 'POST' })
+            .then(res => res.text())
+            .then(data => {
+                location.reload(); // Refresh page to update status
+            });
+    }
+
+    function startVideoCall(tokenNumber) {
+        const roomName = "ClinicApp-Token-" + tokenNumber;
+        window.open(`https://meet.jit.si/${roomName}`, '_blank');
+    }
+</script>
+
+</body>
+</html>

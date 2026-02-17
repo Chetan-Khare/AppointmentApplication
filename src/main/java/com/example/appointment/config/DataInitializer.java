@@ -26,12 +26,30 @@ public class DataInitializer {
                 User doctor = new User();
                 doctor.setEmail("doctor@admin.com"); // Login ID
                 doctor.setFullName("Dr. House");
-                doctor.setPassword(passwordEncoder.encode("password")); // Password
+                doctor.setPassword(passwordEncoder.encode("password@123")); // Password
                 doctor.setRole("DOCTOR"); // Role (Must be DOCTOR)
 
                 userRepository.save(doctor);
 
                 System.out.println("✅ DEFAULT DOCTOR CREATED: doctor@admin.com / password");
+            }
+            // 3. Create Admin (Super User)
+            if (userRepository.findByEmail("admin@admin.com") == null) {
+                User admin = new User();
+                admin.setEmail("admin@admin.com");
+                admin.setFullName("Big Boss");
+                admin.setPassword(passwordEncoder.encode("admin123")); // Password
+                admin.setRole("ADMIN"); // IMPORTANT: Role is ADMIN
+                userRepository.save(admin);
+                System.out.println("✅ DEFAULT ADMIN CREATED");
+            }
+            if (userRepository.findByEmail("staff@admin.com") == null) {
+                User staff = new User();
+                staff.setEmail("staff@admin.com");
+                staff.setFullName("Receptionist Sarah");
+                staff.setPassword(passwordEncoder.encode("password@123"));
+                staff.setRole("STAFF"); // IMPORTANT: Role must be STAFF
+                userRepository.save(staff);
             }
         };
     }

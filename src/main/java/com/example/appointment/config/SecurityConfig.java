@@ -22,10 +22,10 @@ public class SecurityConfig {
         http
                 .authenticationProvider(authenticationProvider()) // Connect the DB Service
 
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**").disable())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**","/api/**").disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register/**", "/login", "/book", "/payment/**", "/receipt/**", "/display", "/css/**", "/js/**", "/ws-appointment/**", "/h2-console/**", "/error").permitAll()
+                        .requestMatchers("/", "/register/**", "/login", "/book", "/payment/**", "/receipt/**", "/display", "/css/**", "/js/**", "/ws-appointment/**", "/h2-console/**", "/error","/api/**").permitAll()
 
                         // Doctor Only Pages
                         .requestMatchers("/queue", "/appointments", "/start/**", "/complete/**", "/cancel/**", "/prescription/**").hasRole("DOCTOR")

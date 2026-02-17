@@ -8,35 +8,68 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+
 @Service
 public class ReminderService {
 
     @Autowired private AppointmentRepository appointmentRepo;
     @Autowired private JavaMailSender mailSender;
 
-    // Cron: "0 0 8 * * ?" means Every day at 8:00:00 AM
+    // --- 1. EXISTING: Daily Reminder (Tomorrow's Appts) ---
     @Scheduled(cron = "0 0 8 * * ?")
-    public void sendAppointmentReminders() {
+    public void sendDailyReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
-
-        // Find all appointments for tomorrow
         List<Appointment> appointments = appointmentRepo.findByDate(tomorrow);
-
         for (Appointment appt : appointments) {
-            sendEmail(appt);
+            sendEmail(appt.getPatientEmail(), "Reminder: Appointment Tomorrow",
+                    "Don't forget your appointment tomorrow at " + appt.getTime());
         }
     }
 
-    private void sendEmail(Appointment appt) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(appt.getPatientEmail());
-        message.setSubject("Reminder: Your Appointment Tomorrow");
-        message.setText("Dear " + appt.getPatientName() + ",\n\n" +
-                "This is a reminder for your appointment with " + appt.getDoctorName() +
-                " scheduled for tomorrow at " + appt.getTime() + ".\n\n" +
-                "See you then!");
+    // --- 2. NEW: 1-Hour Before Reminder (Runs every 15 mins) ---
+    @Scheduled(fixedRate = 900000)
+    public void sendHourlyReminders() {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        List<Appointment> appointments = appointmentRepo.findByDate(today);
 
-        mailSender.send(message);
+        for (Appointment appt : appointments) {
+            LocalTime apptTime = LocalTime.parse(appt.getTime());
+            // Check if appointment is in ~1 hour (between 50-70 mins from now)
+            if (apptTime.minusHours(1).isBefore(now.plusMinutes(10)) &&
+                    apptTime.minusHours(1).isAfter(now.minusMinutes(10))) {
+
+                sendEmail(appt.getPatientEmail(), "Urgent: Appointment in 1 Hour",
+                        "Your appointment with " + appt.getDoctorName() + " is in 1 hour (" + appt.getTime() + ").");
+            }
+        }
+    }
+
+    // --- 3. PUBLIC METHODS (For Controller to use) ---
+
+    public void sendBookingConfirmation(Appointment appt) {
+        sendEmail(appt.getPatientEmail(), "Booking Confirmed ✅",
+                "Hello " + appt.getPatientName() + ",\nYour appointment is confirmed for "
+                        + appt.getDate() + " at " + appt.getTime() + ".\nToken: " + appt.getTokenNumber());
+    }
+
+    public void sendPrescription(Appointment appt, String notes) {
+        sendEmail(appt.getPatientEmail(), "Prescription from Dr. " + appt.getDoctorName() + " 💊",
+                "Here is your prescription:\n\n" + notes + "\n\nGet well soon!");
+    }
+
+    private void sendEmail(String to, String subject, String body) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            mailSender.send(message);
+            System.out.println("📧 Email sent to " + to);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send email: " + e.getMessage());
+        }
     }
 }

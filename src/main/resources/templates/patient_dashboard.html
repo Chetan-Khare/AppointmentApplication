@@ -4,6 +4,15 @@
     <title>My Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* Chatbot Styling (Required for the chat window to look correct) */
+        #chat-window { border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); overflow: hidden; }
+        .chat-header-gradient { background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); }
+        .chat-input-area { padding: 15px; background: white; border-top: 1px solid #eee; }
+        .chat-input-pill { background: #f4f7f6; border-radius: 30px; padding: 5px 15px; border: 1px solid #e0e0e0; }
+        #chat-content { scroll-behavior: smooth; background-color: #f8f9fa; }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -29,8 +38,10 @@
                 <h4 th:text="${user.fullName}">Patient Name</h4>
                 <p class="text-muted" th:text="${user.email}">Patient@example.com</p>
                 <hr>
-                <div class="d-grid gap-2"> <a href="/" class="btn btn-info text-white">
-                    <i class="bi bi-plus-circle"></i> Book New Appointment</a>
+                <div class="d-grid gap-2">
+                    <a href="/" class="btn btn-info text-white">
+                        <i class="bi bi-plus-circle"></i> Book New Appointment
+                    </a>
                     <a href="display" class="btn btn-warning fw-bold">
                         <i class="bi bi-broadcast"></i> Track Live Status
                     </a>
@@ -71,22 +82,39 @@
                                 </td>
                                 <td>
                                     <button th:if="${appt.prescription != null}"
-                                            class="btn btn-sm btn-outline-success"
+                                            type="button" class="btn btn-sm btn-outline-primary"
                                             data-bs-toggle="modal"
-                                            th:data-bs-target="'#rxModal-' + ${appt.id}">
-                                        <i class="bi bi-file-medical"></i> View Rx
+                                            th:data-bs-target="'#viewRx-' + ${appt.id}">
+                                        <i class="bi bi-eye"></i> View
                                     </button>
-                                    <span th:if="${appt.prescription == null}" class="text-muted">-</span>
 
-                                    <div class="modal fade" th:id="'rxModal-' + ${appt.id}" tabindex="-1">
+                                    <a th:if="${appt.prescription != null}"
+                                       th:href="@{/download/prescription/{id}(id=${appt.id})}"
+                                       class="btn btn-sm btn-danger ms-1"
+                                       target="_blank">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                                    </a>
+
+                                    <span th:if="${appt.prescription == null}" class="text-muted small">-</span>
+
+                                    <div class="modal fade" th:id="'viewRx-' + ${appt.id}" tabindex="-1">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
-                                                <div class="modal-header bg-success text-white">
-                                                    <h5 class="modal-title">Doctor's Note</h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                <div class="modal-header bg-light">
+                                                    <h5 class="modal-title">Prescription for <span th:text="${appt.patientName}"></span></h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <pre style="white-space: pre-wrap; font-family: sans-serif;" th:text="${appt.prescription}"></pre>
+                                                    <p class="text-muted small mb-1">Doctor's Notes:</p>
+                                                    <div class="p-3 bg-light border rounded">
+                                                        <pre style="white-space: pre-wrap; font-family: inherit;" th:text="${appt.prescription}"></pre>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <a th:href="@{/download/prescription/{id}(id=${appt.id})}" class="btn btn-primary">
+                                                        <i class="bi bi-printer"></i> Print Official PDF
+                                                    </a>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -106,6 +134,93 @@
         </div>
     </div>
 </div>
+
+<div id="chat-bubble" onclick="toggleChat()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000;">
+    <span style="font-size: 30px; color: white;">💬</span>
+</div>
+
+<div id="chat-window" class="card shadow-lg" style="display: none; position: fixed; bottom: 100px; right: 30px; width: 360px; z-index: 1000; border: none;">
+    <div class="card-header chat-header-gradient text-white d-flex justify-content-between align-items-center py-3 px-3">
+        <div class="d-flex align-items-center gap-2">
+            <span style="font-size: 1.5rem;">🩺</span>
+            <div>
+                <h6 class="mb-0 fw-bold">Clinic Support</h6>
+                <small style="opacity: 0.9; font-size: 0.75rem;"><span style="color: #28a745;">●</span> Online</small>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button onclick="joinVideo()" class="btn btn-sm btn-light text-primary fw-bold rounded-pill px-3 shadow-sm">
+                <i class="bi bi-camera-video-fill"></i> Join
+            </button>
+            <button onclick="toggleChat()" class="btn-close btn-close-white"></button>
+        </div>
+    </div>
+
+    <div id="chat-content" class="card-body" style="height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+        <div class="p-3 bg-white shadow-sm align-self-start text-dark" style="max-width: 85%; border-radius: 15px 15px 15px 4px; border: 1px solid #efefef;">
+            <p class="mb-0" style="font-size: 0.9rem;">👋 <strong>Hi there!</strong><br>
+                I'm your virtual assistant. You can ask about appointments or click "Join" if the doctor called you!
+            </p>
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+        <div class="input-group chat-input-pill">
+            <input type="text" id="user-msg" class="form-control border-0 bg-transparent shadow-none" placeholder="Type a message..." onkeypress="handleKey(event)">
+            <button class="btn btn-link text-primary p-0" onclick="sendMessage()"><i class="bi bi-send-fill"></i></button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+    var socket = new SockJS('/ws-appointment');
+    var stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        stompClient.subscribe('/topic/messages', function (response) {
+            appendMessage(response.body, 'bot');
+        });
+    });
+
+    function toggleChat() {
+        const win = document.getElementById('chat-window');
+        win.style.display = win.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+
+    function sendMessage() {
+        var msgInput = document.getElementById('user-msg');
+        var text = msgInput.value.trim();
+        if (!text) return;
+
+        appendMessage(text, 'user');
+        stompClient.send("/app/chat", {}, text);
+        msgInput.value = '';
+    }
+
+    function appendMessage(text, type) {
+        var content = document.getElementById('chat-content');
+        var div = document.createElement('div');
+        div.className = `p-3 shadow-sm ${type === 'user' ? 'bg-primary text-white align-self-end' : 'bg-white text-dark align-self-start'}`;
+        div.style.maxWidth = "85%";
+        div.style.borderRadius = type === 'user' ? "15px 15px 4px 15px" : "15px 15px 15px 4px";
+        div.innerText = text;
+        content.appendChild(div);
+        content.scrollTop = content.scrollHeight;
+    }
+
+    function joinVideo() {
+        let token = prompt("Enter your Token Number to join the video call:");
+        if (token) {
+            window.open(`https://meet.jit.si/ClinicRoom-${token.trim()}`, '_blank');
+        }
+    }
+</script>
+
 </body>
 </html>

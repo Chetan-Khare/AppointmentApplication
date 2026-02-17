@@ -24,9 +24,14 @@ public class DashboardController {
     // 1. Smart Redirect: Decides where you go after login
     @GetMapping("/default")
     public String defaultAfterLogin(HttpServletRequest request) {
-        if (request.isUserInRole("DOCTOR")) {
-            return "redirect:/queue";
+        if (request.isUserInRole("ADMIN")) {
+            return "redirect:/admin/dashboard";
         }
+        else if (request.isUserInRole("DOCTOR")) {
+            return "redirect:/doctor/dashboard";
+        }
+        else if (request.isUserInRole("STAFF")) {
+            return "redirect:/staff/dashboard";}
         return "redirect:/dashboard";
     }
     @GetMapping("/dashboard")

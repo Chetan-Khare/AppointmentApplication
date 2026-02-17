@@ -4,80 +4,110 @@
   <meta charset="UTF-8">
   <title>Appointment History</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <style>
-        body { background-color: #f4f7f6; }
-        .table-container { margin-top: 50px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .page-header { border-bottom: 2px solid #eee; margin-bottom: 30px; padding-bottom: 10px; }
+        :root { --primary-color: #4e73df; --bg-color: #f8f9fc; }
+        body { background-color: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background: #ffffff; border-bottom: 2px solid #e3e6f0; }
+        .history-card { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); background: white; }
     </style>
 </head>
 <body>
 
-<div class="container table-container">
-  <div class="page-header d-flex justify-content-between align-items-center">
-    <h2 class="text-primary mb-0">📄 Appointment Records</h2>
-    <a href="/queue" class="btn btn-primary">← Back to Queue</a>
+<nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a class="navbar-brand fw-bold text-dark" href="#">
+      Clinic <span class="text-primary">Records</span>
+    </a>
 
+    <a href="/doctor/dashboard" class="btn btn-outline-primary btn-sm fw-bold">
+      <i class="bi bi-arrow-left"></i> Back to Live Queue
+    </a>
   </div>
+</nav>
 
-  <div class="table-responsive">
-    <table class="table table-hover table-striped mb-0 align-middle">
-      <thead class="table-dark">
-      <tr>
-        <th>Token</th>
-        <th>Date</th>
-        <th>Patient Name</th>
-        <th>Status</th>
-        <th>Prescription</th> </tr>
-      </thead>
-      <tbody>
-      <tr th:each="appt : ${appointments}">
-        <td th:text="${appt.tokenNumber}">101</td>
-        <td th:text="${appt.date}">YYYY-MM-DD</td>
-        <td th:text="${appt.patientName}">Patient Name</td>
+<div class="container mt-5">
+  <h2 class="fw-bold mb-4 text-primary">Appointment History</h2>
 
-        <td>
-                <span th:class="${appt.status == 'COMPLETED' ? 'badge bg-success' : 'badge bg-secondary'}"
-                      th:text="${appt.status}">COMPLETED</span>
-        </td>
+  <div class="card history-card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0 table-hover">
+          <thead class="table-light">
+          <tr>
+            <th class="ps-4">Date</th>
+            <th>Token</th>
+            <th>Patient Name</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="a : ${appointments}">
+            <td class="ps-4">
+              <div class="fw-bold text-dark" th:text="${a.date}">YYYY-MM-DD</div>
+              <small class="text-muted" th:text="${a.time}">00:00</small>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">#<span th:text="${a.tokenNumber}">101</span></span>
+            </td>
+            <td th:text="${a.patientName}">Name</td>
+            <td>
+              <span th:if="${a.status == 'COMPLETED'}" class="badge bg-success">Completed</span>
+              <span th:if="${a.status == 'CANCELLED'}" class="badge bg-danger">Cancelled</span>
+              <span th:if="${a.status == 'WAITING'}" class="badge bg-warning text-dark">Waiting</span>
+              <span th:if="${a.status == 'IN_PROGRESS'}" class="badge bg-primary">In Progress</span>
+            </td>
+            <td>
+              <span th:if="${a.paymentStatus == 'PAID'}" class="text-success fw-bold"><i class="bi bi-check-all"></i> Paid</span>
+              <span th:if="${a.paymentStatus != 'PAID'}" class="text-danger">Unpaid</span>
+            </td>
+            <td>
+              <button th:if="${a.prescription != null}"
+                      type="button" class="btn btn-sm btn-outline-primary"
+                      data-bs-toggle="modal"
+                      th:data-bs-target="'#viewRx-' + ${a.id}">
+                <i class="bi bi-eye"></i> View
+              </button>
 
-        <td>
-          <button th:if="${appt.prescription != null}"
-                  type="button" class="btn btn-sm btn-outline-primary"
-                  data-bs-toggle="modal"
-                  th:data-bs-target="'#viewRx-' + ${appt.id}">
-            <i class="bi bi-eye"></i> View Note
-          </button>
-          <span th:if="${appt.prescription == null}" class="text-muted small">-</span>
+              <a th:if="${a.prescription != null}"
+                 th:href="@{/download/prescription/{id}(id=${a.id})}"
+                 class="btn btn-sm btn-danger ms-1"
+                 target="_blank">
+                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+              </a>
 
-          <div class="modal fade" th:id="'viewRx-' + ${appt.id}" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header bg-light">
-                  <h5 class="modal-title">Prescription for <span th:text="${appt.patientName}"></span></h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                  <p class="text-muted small mb-1">Doctor's Notes:</p>
-                  <div class="p-3 bg-light border rounded">
-                    <pre style="white-space: pre-wrap; font-family: inherit;" th:text="${appt.prescription}"></pre>
+              <span th:if="${a.prescription == null}" class="text-muted small">-</span>
+
+              <div class="modal fade" th:id="'viewRx-' + ${a.id}" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header bg-light">
+                      <h5 class="modal-title">Prescription for <span th:text="${a.patientName}"></span></h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p class="text-muted small mb-1">Doctor's Notes:</p>
+                      <div class="p-3 bg-light border rounded">
+                        <pre style="white-space: pre-wrap; font-family: inherit;" th:text="${a.prescription}"></pre>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <a th:href="@{/download/prescription/{id}(id=${a.id})}" class="btn btn-primary">
+                        <i class="bi bi-printer"></i> Print PDF
+                      </a>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                   </div>
                 </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button class="btn btn-primary" onclick="window.print()">Print</button>
-                </div>
               </div>
-            </div>
-          </div>
-
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="mt-4 d-flex justify-content-end">
-    <a href="/display" class="btn btn-primary">Go to display →</a>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
