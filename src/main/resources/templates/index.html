@@ -76,6 +76,18 @@
                         <small class="text-muted">Select a date first...</small>
                     </div>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Doctor</label>
+                    <select name="doctorName" class="form-select" required>
+                        <option value="" disabled selected>Choose a specialist...</option>
+
+                        <option th:each="doc : ${doctorList}"
+                                th:value="${doc.fullName}"
+                                th:text="${doc.fullName}">
+                            Dr. Default
+                        </option>
+                    </select>
+                </div>
 
                 <div class="mb-4">
                     <label class="form-label fw-bold text-secondary">Payment Method</label>

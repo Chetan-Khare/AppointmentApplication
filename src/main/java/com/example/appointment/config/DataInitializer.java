@@ -38,7 +38,7 @@ public class DataInitializer {
                 User admin = new User();
                 admin.setEmail("admin@admin.com");
                 admin.setFullName("Big Boss");
-                admin.setPassword(passwordEncoder.encode("admin123")); // Password
+                admin.setPassword(passwordEncoder.encode("admin@123")); // Password
                 admin.setRole("ADMIN"); // IMPORTANT: Role is ADMIN
                 userRepository.save(admin);
                 System.out.println("✅ DEFAULT ADMIN CREATED");

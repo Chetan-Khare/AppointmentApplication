@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.InputStreamResource;
 import java.io.ByteArrayInputStream;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.Principal;
 import java.time.LocalDate;
@@ -28,6 +29,8 @@ import java.util.stream.Collectors;
 
     @Controller
     public class AppointmentController {
+        @Autowired
+        private PasswordEncoder passwordEncoder; // <--- Add this line
 
         @Autowired
         private AppointmentRepository appointmentRepository;
@@ -147,6 +150,9 @@ import java.util.stream.Collectors;
         @GetMapping("/")
         public String showHome(Model model) {
             model.addAttribute("appointment", new Appointment());
+            // 1. Get list of doctors to show in dropdown
+            List<User> doctors = userRepository.findByRole("DOCTOR");
+            model.addAttribute("doctorList", doctors);
             List<Appointment> waitlist = appointmentRepository.findAll().stream()
                     .filter(a -> !"COMPLETED".equals(a.getStatus()) && !"PENDING_PAYMENT".equals(a.getStatus()))
                     .collect(Collectors.toList());
@@ -248,7 +254,33 @@ import java.util.stream.Collectors;
             if(appt != null) { appt.setStatus("CANCELLED"); appointmentRepository.save(appt); }
             return "redirect:/doctor/dashboard";
         }
+        @GetMapping("/admin/confirm-pay/{id}")
+        public String adminConfirmPay(@PathVariable Long id) {
+            Appointment appt = appointmentRepository.findById(id).orElse(null);
+            if (appt != null) {
+                appt.setPaymentStatus("PAID");
+                appointmentRepository.save(appt);
+            }
+            return "redirect:/admin/dashboard";
+        }
+        @PostMapping("/admin/add-user")
+        public String addUser(@ModelAttribute User user, RedirectAttributes ra) {
+            // 1. Check if email exists
+            if (userRepository.findByEmail(user.getEmail()) != null) {
+                ra.addFlashAttribute("error", "Email already exists!");
+                return "redirect:/admin/dashboard";
+            }
 
+            // 2. ENCODE THE PASSWORD (Crucial Step!)
+            String encodedPassword = passwordEncoder.encode(user.getPassword());
+            user.setPassword(encodedPassword);
+
+            // 3. Save
+            userRepository.save(user);
+
+            ra.addFlashAttribute("message", "New " + user.getRole() + " created successfully!");
+            return "redirect:/admin/dashboard";
+        }
         @GetMapping("/logout")
         public String logout() { return "redirect:/login"; }
     }

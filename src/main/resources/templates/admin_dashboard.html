@@ -5,21 +5,18 @@
     <title>Admin Portal | Clinic Overview</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
     <style>
         :root { --primary-color: #4e73df; --bg-color: #f8f9fc; }
         body { background-color: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .navbar { background: #ffffff; border-bottom: 2px solid #e3e6f0; }
         .dashboard-card { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); background: white; }
 
-        /* INTERACTIVE CARDS */
-        .stat-card { border-left: 4px solid var(--primary-color); transition: all 0.2s; cursor: pointer; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-
-        /* FIX: Better visual feedback for the active filter */
-        .stat-card.active-filter {
-            background-color: #e8eaf6;
-            border-right: 4px solid var(--primary-color);
-            transform: translateY(-5px);
+        /* STATIC CARDS (Simple Display Only) */
+        .stat-card {
+            border-left: 4px solid var(--primary-color);
+            transition: none;
+            cursor: default; /* Not clickable */
         }
 
         .icon-circle { height: 50px; width: 50px; background-color: rgba(78, 115, 223, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem; }
@@ -33,19 +30,28 @@
             Clinic <span class="text-primary">Admin</span>
         </a>
         <div class="d-flex align-items-center gap-3">
-            <span class="fw-bold text-dark" th:text="${adminName}">Administrator Sir</span>
+            <span class="fw-bold text-dark" th:text="${adminName}">Administrator</span>
             <a href="/login" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</a>
         </div>
     </div>
 </nav>
 
 <div class="container mt-5">
+
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <h2 class="fw-bold mb-4 text-dark">Clinic Overview</h2>
 
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card dashboard-card stat-card py-2 border-primary border-start border-0 border-4"
-                 onclick="filterList('ALL', this)" id="card-all">
+            <div class="card dashboard-card stat-card py-2 border-primary border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -61,7 +67,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card dashboard-card stat-card py-2 border-success border-start border-0 border-4" style="cursor: default;">
+            <div class="card dashboard-card stat-card py-2 border-success border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -77,8 +83,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card dashboard-card stat-card py-2 border-info border-start border-0 border-4"
-                 onclick="filterList('DOCTOR', this)">
+            <div class="card dashboard-card stat-card py-2 border-info border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -94,8 +99,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card dashboard-card stat-card py-2 border-warning border-start border-0 border-4"
-                 onclick="filterList('STAFF', this)">
+            <div class="card dashboard-card stat-card py-2 border-warning border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -127,7 +131,7 @@
                                 <th>Status</th>
                                 <th>Payment</th>
                                 <th>Time</th>
-                            </tr>
+                                <th>Actions</th> </tr>
                             </thead>
                             <tbody>
                             <tr th:each="a : ${appointments}">
@@ -146,6 +150,24 @@
                                     <span th:if="${a.paymentStatus != 'PAID'}" class="text-danger fw-bold small">Pending</span>
                                 </td>
                                 <td class="text-muted small" th:text="${a.time}">10:00</td>
+
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/admin/cancel/{id}(id=${a.id})}"
+                                           class="btn btn-outline-danger"
+                                           title="Cancel Appointment"
+                                           onclick="return confirm('Cancel this appointment?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </a>
+
+                                        <a th:if="${a.paymentStatus != 'PAID'}"
+                                           th:href="@{/admin/confirm-pay/{id}(id=${a.id})}"
+                                           class="btn btn-outline-success"
+                                           title="Mark as Paid">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             </tbody>
                         </table>
@@ -158,14 +180,14 @@
             <div class="card dashboard-card mb-4">
                 <div class="card-header py-3 bg-white border-bottom-0 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 fw-bold text-dark">Users Directory</h6>
-                    <button class="btn btn-xs btn-link text-decoration-none"
-                            onclick="filterList('ALL', document.getElementById('card-all'))">Show All</button>
+                    <button class="btn btn-sm btn-primary rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="bi bi-plus-lg"></i> Add New
+                    </button>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush" id="userList">
                         <li class="list-group-item d-flex justify-content-between align-items-center px-4 user-item"
-                            th:each="s : ${staffList}"
-                            th:data-role="${s.role}">
+                            th:each="s : ${staffList}">
 
                             <div class="d-flex align-items-center">
                                 <div class="bg-light rounded-circle p-2 me-3 text-secondary">
@@ -180,51 +202,66 @@
                                   th:text="${s.role}">ROLE</span>
                         </li>
                     </ul>
-                    <div id="noUsersMsg" class="text-center p-3 text-muted" style="display: none;">
-                        No users found for this filter.
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/admin/add-user" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Add New Staff / Doctor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="fullName" class="form-control" placeholder="e.g. Dr. Khare" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="doctor@clinic.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="DOCTOR">Doctor</option>
+                            <option value="STAFF">Support Staff</option>
+                            <option value="ADMIN">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Default Password</label>
+                        <input type="text" name="password" class="form-control bg-light" value="Clinic@123" readonly>
+                        <small class="text-muted">User can change this later.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // FIX: New robust function to handle filtering and visual interaction
-    function filterList(role, cardElement) {
-        // 1. VISUAL: Reset all cards
-        document.querySelectorAll('.stat-card').forEach(card => {
-            card.classList.remove('active-filter');
-        });
-
-        // 2. VISUAL: Highlight clicked card (if valid)
-        if (cardElement) {
-            cardElement.classList.add('active-filter');
-        }
-
-        // 3. LOGIC: Filter the list
-        let items = document.querySelectorAll('.user-item');
-        let count = 0;
-        let targetRole = role ? role.toUpperCase() : 'ALL';
-
-        items.forEach(item => {
-            let itemRole = item.getAttribute('data-role');
-            if (itemRole) itemRole = itemRole.toUpperCase();
-
-            if (targetRole === 'ALL' || itemRole === targetRole) {
-                item.style.display = 'flex';
-                count++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        // 4. EMPTY STATE MSG
-        let msg = document.getElementById('noUsersMsg');
-        if(msg) {
-            msg.style.display = (count === 0) ? 'block' : 'none';
-        }
+  const ctx = document.getElementById('myChart');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Doctors', 'Staff', 'Patients'],
+      datasets: [{
+        data: [ [[${totalDoctors}]], [[${totalStaff}]], [[${totalPatients}]] ],
+        backgroundColor: ['#36b9cc', '#f6c23e', '#1cc88a']
+      }]
     }
+  });
 </script>
 
 </body>
