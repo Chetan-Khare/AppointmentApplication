@@ -62,6 +62,17 @@
                     <label class="form-label fw-bold">Email Address</label>
                     <input type="email" name="patientEmail" class="form-control" placeholder="Enter your Email" required>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Doctor</label>
+                    <select id="doctorDropdown" name="doctorName" class="form-select" required onchange="fetchSlots()">
+                        <option value="" data-id="">Select Doctor</option>
+
+                        <option th:each="doc : ${doctorList}"
+                                th:value="${doc.fullName}"
+                                th:data-id="${doc.id}"
+                                th:text="${doc.fullName}"></option>
+                    </select>
+                </div>
 
                 <div class="col-md-12 mb-3">
                     <label class="form-label fw-bold">Select Date</label>
@@ -75,18 +86,6 @@
                     <div id="slot-container" class="d-flex flex-wrap gap-2">
                         <small class="text-muted">Select a date first...</small>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Select Doctor</label>
-                    <select name="doctorName" class="form-select" required>
-                        <option value="" disabled selected>Choose a specialist...</option>
-
-                        <option th:each="doc : ${doctorList}"
-                                th:value="${doc.fullName}"
-                                th:text="${doc.fullName}">
-                            Dr. Default
-                        </option>
-                    </select>
                 </div>
 
                 <div class="mb-4">
@@ -210,68 +209,67 @@
         }
     }
 
-    // 2. SMART SLOT FETCHING
-    document.getElementById('dateInput').addEventListener('change', function() {
-        fetchSlots(this.value);
-    });
+    // 2. SMART SLOT FETCHING (Unified & Corrected)
+    const dateInput = document.getElementById('dateInput');
+    const doctorDropdown = document.getElementById('doctorDropdown');
+    const container = document.getElementById('slot-container');
 
-    // REPLACE your existing fetchSlots function with this one
-    function fetchSlots(date) {
-        const container = document.getElementById('slot-container');
+    // Attach listeners to both inputs so slots update automatically
+    dateInput.addEventListener('change', fetchSlots);
+    doctorDropdown.addEventListener('change', fetchSlots);
+
+    function fetchSlots() {
+        const date = dateInput.value;
+
+        // 1. Find the currently selected <option> tag
+        const selectedOption = doctorDropdown.options[doctorDropdown.selectedIndex];
+
+        // 2. Extract the hidden data-id (e.g., "1") for the API call
+        const doctorId = selectedOption ? selectedOption.getAttribute("data-id") : null;
+
+        // Only fetch if BOTH date and doctor are selected
+        if (!date || !doctorId) {
+            container.innerHTML = '<small class="text-muted">Select a doctor and date first...</small>';
+            return;
+        }
+
         container.innerHTML = '<small class="text-muted">Loading slots...</small>';
 
-        fetch('/api/slots?date=' + date)
+        // Fetch using the doctorId, not the name
+        fetch(`/api/slots?date=${date}&doctorId=${doctorId}`)
             .then(res => res.json())
             .then(slots => {
                 container.innerHTML = '';
 
-                // --- NEW: Client-Side Time Filter ---
-                const today = new Date();
-                // Create a "YYYY-MM-DD" string for today to match the input
-                const todayStr = today.getFullYear() + '-' +
-                                 String(today.getMonth() + 1).padStart(2, '0') + '-' +
-                                 String(today.getDate()).padStart(2, '0');
-
-                // If the user selected TODAY, filter out past times
-                if (date === todayStr) {
-                    const currentMinutes = today.getHours() * 60 + today.getMinutes();
-
-                    slots = slots.filter(time => {
-                        // Convert "09:30" to minutes (e.g., 9*60 + 30 = 570)
-                        const [h, m] = time.split(':').map(Number);
-                        const slotMinutes = h * 60 + m;
-                        return slotMinutes > currentMinutes; // Only keep future times
-                    });
-                }
-                // ------------------------------------
-
                 if(slots.length === 0) {
-                    container.innerHTML = '<span class="text-danger">No slots available</span>';
+                    container.innerHTML = '<span class="text-danger fw-bold">No slots available (Doctor is fully booked or on leave)</span>';
                     return;
                 }
 
                 slots.forEach(time => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
-                    btn.className = 'btn btn-outline-primary btn-sm'; // Bootstrap classes
+                    btn.className = 'btn btn-outline-primary btn-sm m-1 fw-bold';
                     btn.innerText = time;
                     btn.onclick = function() {
-                        // Visual: highlight active button
-                        document.querySelectorAll('#slot-container button').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('#slot-container button').forEach(b => {
+                            b.classList.remove('active');
+                            b.classList.replace('btn-primary', 'btn-outline-primary'); // reset colors
+                        });
                         this.classList.add('active');
-                        // Logic: set the hidden input value
+                        this.classList.replace('btn-outline-primary', 'btn-primary'); // Highlight selection
                         document.getElementById('selectedTime').value = time;
                     };
                     container.appendChild(btn);
                 });
             })
             .catch(err => {
-                console.error(err);
-                container.innerHTML = '<span class="text-danger">Error loading slots</span>';
+                console.error('Error fetching slots:', err);
+                container.innerHTML = '<span class="text-danger">Error loading slots. Please try again.</span>';
             });
     }
 
-    // 3. DARK MODE TOGGLE (FIXED)
+    // 3. DARK MODE TOGGLE
     function toggleDarkMode() {
         const html = document.documentElement;
         const current = html.getAttribute('data-bs-theme');
@@ -279,7 +277,6 @@
 
         html.setAttribute('data-bs-theme', next);
 
-        // Update Icon
         const icon = document.getElementById('theme-icon');
         icon.className = next === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
     }

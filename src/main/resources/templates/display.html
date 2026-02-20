@@ -118,6 +118,9 @@
             <div class="status-label">Now Serving</div>
             <h1 id="token-display" class="token-hero">--</h1>
             <h2 id="name-display" class="name-hero">Waiting...</h2>
+            <h3 id="cabin-display" class="mt-4" style="font-size: 3.5rem; font-weight: 700; color: #ffeb3b; text-shadow: 0 0 20px rgba(255, 235, 59, 0.4); display: none;">
+                Proceed to Cabin <span id="cabin-number"></span>
+            </h3>
 
             <div class="mt-5 d-flex align-items-center">
                 <span class="spinner-grow spinner-grow-sm text-info me-3" role="status"></span>
@@ -174,31 +177,33 @@
     });
 
     // 3. Update UI and Trigger Voice
-    function updateDisplay(patient) {
-        const container = document.getElementById('display-container');
+   function updateDisplay(payload) {
+    const container = document.getElementById('display-container');
 
-        // Flash effect to grab attention
-        container.classList.add('flash-effect');
-        setTimeout(() => container.classList.remove('flash-effect'), 2000);
+    container.classList.add('flash-effect');
+    setTimeout(() => container.classList.remove('flash-effect'), 2000);
 
-        // Update Text
-        document.getElementById('token-display').innerText = patient.tokenNumber;
-        document.getElementById('name-display').innerText = patient.patientName;
+    document.getElementById('token-display').innerText = payload.tokenNumber;
+    document.getElementById('name-display').innerText = payload.patientName;
 
-        // Trigger Voice Announcement (Twice for safety)
-        speakCall(patient.tokenNumber, patient.patientName);
-        setTimeout(() => speakCall(patient.tokenNumber, patient.patientName), 6000);
+    // Show the Cabin number
+    document.getElementById('cabin-display').style.display = 'block';
+    document.getElementById('cabin-number').innerText = payload.cabin;
+
+    // Trigger Voice Announcement with Cabin
+    speakCall(payload.tokenNumber, payload.patientName, payload.cabin);
+    setTimeout(() => speakCall(payload.tokenNumber, payload.patientName, payload.cabin), 6000);
+}
+
+function speakCall(token, name, cabin) {
+    if ('speechSynthesis' in window) {
+        // Now the robot voice tells them the specific cabin!
+        const message = new SpeechSynthesisUtterance(`Token number ${token}. ${name}. Please proceed to cabin number ${cabin}.`);
+        message.rate = 0.85;
+        message.pitch = 1.0;
+        window.speechSynthesis.speak(message);
     }
-
-    // 4. Text-to-Speech Logic
-    function speakCall(token, name) {
-        if ('speechSynthesis' in window) {
-            const message = new SpeechSynthesisUtterance(`Token number ${token}. ${name}. Please proceed to the cabin.`);
-            message.rate = 0.85;
-            message.pitch = 1.0;
-            window.speechSynthesis.speak(message);
-        }
-    }
+}
 </script>
 
 </body>

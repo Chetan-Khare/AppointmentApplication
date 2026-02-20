@@ -4,12 +4,75 @@ import com.example.appointment.model.Appointment;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
-
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.List;
+
 
 @Service
 public class PdfService {
+    public ByteArrayInputStream generateAdminReport(List<Appointment> appointments) {
+        Document document = new Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try {
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // 1. Report Header
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, BaseColor.BLACK);
+            Paragraph title = new Paragraph("Clinic Appointment Summary Report", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            document.add(new Paragraph("Generated on: " + java.time.LocalDate.now()));
+            document.add(new Paragraph("Total Records: " + appointments.size()));
+            document.add(new Paragraph(" ")); // Spacer
+
+            // 2. Table Construction (6 Columns)
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            table.setSpacingAfter(10f);
+
+            // Column Widths
+            float[] columnWidths = {1f, 2f, 2f, 1.5f, 1f, 1.5f};
+            table.setWidths(columnWidths);
+
+            // 3. Define Table Headers
+            String[] headers = {"Token", "Patient", "Doctor", "Date", "Time", "Status"};
+            Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.WHITE);
+
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, headFont));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setBackgroundColor(BaseColor.DARK_GRAY);
+                cell.setPadding(5);
+                table.addCell(cell);
+            }
+
+            // 4. Fill Table Data
+            Font dataFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            for (Appointment appt : appointments) {
+                table.addCell(new PdfPCell(new Phrase(String.valueOf(appt.getTokenNumber()), dataFont)));
+                table.addCell(new PdfPCell(new Phrase(appt.getPatientName(), dataFont)));
+                table.addCell(new PdfPCell(new Phrase(appt.getDoctorName(), dataFont)));
+                table.addCell(new PdfPCell(new Phrase(appt.getDate().toString(), dataFont)));
+                table.addCell(new PdfPCell(new Phrase(appt.getTime(), dataFont)));
+                table.addCell(new PdfPCell(new Phrase(appt.getStatus(), dataFont)));
+            }
+
+            document.add(table);
+            document.close();
+
+        } catch (DocumentException ex) {
+            ex.printStackTrace();
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
 
     public ByteArrayInputStream generatePrescriptionPdf(Appointment appointment) {
         Document document = new Document();

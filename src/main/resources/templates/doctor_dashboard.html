@@ -27,6 +27,7 @@
 <body>
 
 <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+
     <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="#">
             <span class="fw-bold text-dark" style="letter-spacing: -1px; font-size: 1.6rem;">
@@ -54,7 +55,18 @@
             <a href="/login" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</a>
         </div>
     </div>
+    <div class="input-group shadow-sm" style="width: 115px; height: 28px;">
+        <span class="input-group-text bg-primary text-white border-primary px-2 py-0 fw-bold" style="font-size: 0.75rem;">Cabin</span>
+        <select id="cabinSelect" class="form-select border-primary fw-bold text-primary px-2 py-0" style="font-size: 0.8rem; background-position: right 0.25rem center; background-size: 12px 12px;">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+        </select>
+    </div>
 </nav>
+
 
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-end mb-4">
@@ -191,19 +203,40 @@
         });
     }
 
-    // NEW: Function to Call Patient via API
-    function callPatient(id) {
-        fetch('/doctor/call?id=' + id, { method: 'POST' })
-            .then(res => res.text())
-            .then(data => {
-                location.reload(); // Refresh page to update status
-            });
-    }
+   function callPatient(id) {
+    // Read the selected cabin number
+    const cabinNum = document.getElementById("cabinSelect").value;
+
+    // Send both the ID and the Cabin number to Java
+    fetch('/doctor/call?id=' + id + '&cabin=' + cabinNum, { method: 'POST' })
+        .then(res => res.text())
+        .then(data => {
+            location.reload();
+        });
+}
 
     function startVideoCall(tokenNumber) {
         const roomName = "ClinicApp-Token-" + tokenNumber;
         window.open(`https://meet.jit.si/${roomName}`, '_blank');
     }
+    // --- ADD THIS ANYWHERE INSIDE YOUR <script> TAG ---
+
+document.addEventListener("DOMContentLoaded", function() {
+    const cabinSelect = document.getElementById("cabinSelect");
+
+    // 1. Check if the browser remembers a previously saved cabin
+    const savedCabin = localStorage.getItem("doctorCabin");
+    if (savedCabin) {
+        // If yes, set the dropdown to that cabin automatically
+        cabinSelect.value = savedCabin;
+    }
+
+    // 2. Listen for any changes the doctor makes
+    cabinSelect.addEventListener("change", function() {
+        // Save the new choice to the browser's memory
+        localStorage.setItem("doctorCabin", this.value);
+    });
+});
 </script>
 
 </body>

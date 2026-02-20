@@ -11,15 +11,9 @@
         body { background-color: var(--bg-color); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .navbar { background: #ffffff; border-bottom: 2px solid #e3e6f0; }
         .dashboard-card { border: none; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); background: white; }
-
-        /* STATIC CARDS (Simple Display Only) */
-        .stat-card {
-            border-left: 4px solid var(--primary-color);
-            transition: none;
-            cursor: default; /* Not clickable */
-        }
-
+        .stat-card { border-left: 4px solid var(--primary-color); cursor: default; }
         .icon-circle { height: 50px; width: 50px; background-color: rgba(78, 115, 223, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.5rem; }
+        .table-responsive { max-height: 450px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -37,7 +31,6 @@
 </nav>
 
 <div class="container mt-5">
-
     <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${message}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -50,7 +43,7 @@
     <h2 class="fw-bold mb-4 text-dark">Clinic Overview</h2>
 
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3">
             <div class="card dashboard-card stat-card py-2 border-primary border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -58,15 +51,12 @@
                             <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Appointments</div>
                             <div class="h3 mb-0 fw-bold text-gray-800" th:text="${totalAppointments}">0</div>
                         </div>
-                        <div class="icon-circle">
-                            <i class="bi bi-calendar-check"></i>
-                        </div>
+                        <div class="icon-circle"><i class="bi bi-calendar-check"></i></div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3">
             <div class="card dashboard-card stat-card py-2 border-success border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -74,15 +64,60 @@
                             <div class="text-xs fw-bold text-success text-uppercase mb-1">Registered Patients</div>
                             <div class="h3 mb-0 fw-bold text-gray-800" th:text="${totalPatients}">0</div>
                         </div>
-                        <div class="icon-circle" style="background-color: rgba(28, 200, 138, 0.1); color: #1cc88a;">
-                            <i class="bi bi-people-fill"></i>
+                        <div class="icon-circle" style="background-color: rgba(28, 200, 138, 0.1); color: #1cc88a;"><i class="bi bi-people-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #f6c23e;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="small fw-bold text-warning text-uppercase mb-1">Waiting (Today)</div>
+                            <div class="h3 mb-0 fw-bold text-gray-800" th:text="${waitingToday}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-hourglass-split fs-2 text-warning opacity-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #1cc88a;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="small fw-bold text-success text-uppercase mb-1">Completed (Today)</div>
+                            <div class="h3 mb-0 fw-bold text-gray-800" th:text="${completedToday}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle-fill fs-2 text-success opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #4e73df;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="small fw-bold text-primary text-uppercase mb-1">Revenue (Today)</div>
+                            <div class="h3 mb-0 fw-bold text-gray-800">
+                                ₹<span th:text="${todaysRevenue}">0</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-rupee fs-2 text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
             <div class="card dashboard-card stat-card py-2 border-info border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -90,15 +125,27 @@
                             <div class="text-xs fw-bold text-info text-uppercase mb-1">Active Doctors</div>
                             <div class="h3 mb-0 fw-bold text-gray-800" th:text="${totalDoctors}">0</div>
                         </div>
-                        <div class="icon-circle" style="background-color: rgba(54, 185, 204, 0.1); color: #36b9cc;">
-                            <i class="bi bi-person-badge-fill"></i>
+                        <div class="icon-circle" style="background-color: rgba(54, 185, 204, 0.1); color: #36b9cc;"><i class="bi bi-person-badge-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow-sm h-100 py-2" style="border-left: 4px solid #e74a3b;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="small fw-bold text-danger text-uppercase mb-1">Doctors on Leave</div>
+                            <div class="h3 mb-0 fw-bold text-gray-800" th:text="${doctorsOnLeave}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-x-fill fs-2 text-danger opacity-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-3">
+        <div class="col-md-3 mb-3">
             <div class="card dashboard-card stat-card py-2 border-warning border-start border-0 border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -106,32 +153,63 @@
                             <div class="text-xs fw-bold text-warning text-uppercase mb-1">Support Staff</div>
                             <div class="h3 mb-0 fw-bold text-gray-800" th:text="${totalStaff}">0</div>
                         </div>
-                        <div class="icon-circle" style="background-color: rgba(246, 194, 62, 0.1); color: #f6c23e;">
-                            <i class="bi bi-headset"></i>
-                        </div>
+                        <div class="icon-circle" style="background-color: rgba(246, 194, 62, 0.1); color: #f6c23e;"><i class="bi bi-headset"></i></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card dashboard-card mb-4">
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-3">
+            <div class="card dashboard-card h-100">
                 <div class="card-header py-3 bg-white border-bottom-0">
-                    <h6 class="m-0 fw-bold text-primary">Recent Activity</h6>
+                    <h6 class="m-0 fw-bold text-primary">📅 Appointment Trends (Last 7 Days)</h6>
                 </div>
+                <div class="card-body"><canvas id="barChart" style="height: 300px;"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-header py-3 bg-white border-bottom-0">
+                    <h6 class="m-0 fw-bold text-success">💰 Payment Methods</h6>
+                </div>
+                <div class="card-body"><canvas id="doughnutChart" style="height: 300px;"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header py-3 bg-white border-bottom-0 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <h6 class="m-0 fw-bold text-primary">Recent Activity</h6>
+                        <a href="/admin/download/report" class="btn btn-sm btn-outline-danger shadow-sm">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF Report
+                        </a>
+                    </div>
+
+                    <form action="/admin/dashboard" method="get" class="d-flex gap-2">
+                        <input type="text" name="doctorSearch" class="form-control form-control-sm"
+                               placeholder="Filter by Doctor..." th:value="${doctorSearch}">
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+                        <a href="/admin/dashboard" class="btn btn-sm btn-outline-secondary" th:if="${doctorSearch}">Clear</a>
+                    </form>
+                </div>
+
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <div class="table-responsive">
                         <table class="table align-middle mb-0 table-hover">
                             <thead class="table-light sticky-top">
                             <tr>
                                 <th class="ps-4">Token</th>
                                 <th>Patient</th>
+                                <th>Doctor</th>
                                 <th>Status</th>
-                                <th>Payment</th>
                                 <th>Time</th>
-                                <th>Actions</th> </tr>
+                                <th>Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
                             <tr th:each="a : ${appointments}">
@@ -139,35 +217,27 @@
                                     <span class="badge bg-light text-primary border">#<span th:text="${a.tokenNumber}">101</span></span>
                                 </td>
                                 <td th:text="${a.patientName}">Name</td>
+                                <td class="small fw-bold" th:text="${a.doctorName}">Doctor</td>
                                 <td>
                                     <span th:if="${a.status == 'COMPLETED'}" class="badge bg-success">Completed</span>
                                     <span th:if="${a.status == 'CANCELLED'}" class="badge bg-danger">Cancelled</span>
                                     <span th:if="${a.status == 'WAITING'}" class="badge bg-warning text-dark">Waiting</span>
                                     <span th:if="${a.status == 'IN_PROGRESS'}" class="badge bg-primary">In Progress</span>
                                 </td>
-                                <td>
-                                    <span th:if="${a.paymentStatus == 'PAID'}" class="text-success fw-bold small"><i class="bi bi-check-circle-fill"></i> PAID</span>
-                                    <span th:if="${a.paymentStatus != 'PAID'}" class="text-danger fw-bold small">Pending</span>
-                                </td>
                                 <td class="text-muted small" th:text="${a.time}">10:00</td>
-
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a th:href="@{/admin/cancel/{id}(id=${a.id})}"
-                                           class="btn btn-outline-danger"
-                                           title="Cancel Appointment"
-                                           onclick="return confirm('Cancel this appointment?')">
+                                        <a th:href="@{/admin/cancel/{id}(id=${a.id})}" class="btn btn-outline-danger" onclick="return confirm('Cancel this appointment?')">
                                             <i class="bi bi-x-lg"></i>
                                         </a>
-
-                                        <a th:if="${a.paymentStatus != 'PAID'}"
-                                           th:href="@{/admin/confirm-pay/{id}(id=${a.id})}"
-                                           class="btn btn-outline-success"
-                                           title="Mark as Paid">
+                                        <a th:if="${a.paymentStatus != 'PAID'}" th:href="@{/admin/confirm-pay/{id}(id=${a.id})}" class="btn btn-outline-success">
                                             <i class="bi bi-currency-dollar"></i>
                                         </a>
                                     </div>
                                 </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(appointments)}">
+                                <td colspan="6" class="text-center py-4 text-muted">No appointments found.</td>
                             </tr>
                             </tbody>
                         </table>
@@ -185,21 +255,18 @@
                     </button>
                 </div>
                 <div class="card-body p-0">
-                    <ul class="list-group list-group-flush" id="userList">
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-4 user-item"
-                            th:each="s : ${staffList}">
-
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-4" th:each="s : ${staffList}">
                             <div class="d-flex align-items-center">
-                                <div class="bg-light rounded-circle p-2 me-3 text-secondary">
-                                    <i class="bi bi-person-fill"></i>
-                                </div>
+                                <div class="bg-light rounded-circle p-2 me-3 text-secondary"><i class="bi bi-person-fill"></i></div>
                                 <div>
                                     <div class="fw-bold text-dark" th:text="${s.fullName}">Name</div>
-                                    <div class="small text-muted" th:text="${s.email}">email</div>
+                                    <div class="small text-muted" th:text="${s.role}">Role</div>
                                 </div>
                             </div>
-                            <span th:class="${s.role == 'DOCTOR' ? 'badge bg-primary' : 'badge bg-warning text-dark'}"
-                                  th:text="${s.role}">ROLE</span>
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" th:data-bs-target="'#leaveModal-' + ${s.id}">
+                                <i class="bi bi-calendar-x"></i>
+                            </button>
                         </li>
                     </ul>
                 </div>
@@ -207,23 +274,22 @@
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="/admin/add-user" method="post">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Add New Staff / Doctor</h5>
+                    <h5 class="modal-title fw-bold">Add New User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Full Name</label>
-                        <input type="text" name="fullName" class="form-control" placeholder="e.g. Dr. Khare" required>
+                        <input type="text" name="fullName" class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="doctor@clinic.com" required>
+                        <input type="email" name="email" class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>
@@ -236,7 +302,6 @@
                     <div class="mb-3">
                         <label class="form-label">Default Password</label>
                         <input type="text" name="password" class="form-control bg-light" value="Clinic@123" readonly>
-                        <small class="text-muted">User can change this later.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -247,22 +312,60 @@
         </div>
     </div>
 </div>
-
+<div th:each="s : ${staffList}" class="modal fade" th:id="'leaveModal-' + ${s.id}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/admin/assign-leave" method="post">
+                <input type="hidden" name="userId" th:value="${s.id}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Leave: <span th:text="${s.fullName}">User</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select Date</label>
+                        <input type="date" name="leaveDate" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Confirm Leave</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  const ctx = document.getElementById('myChart');
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Doctors', 'Staff', 'Patients'],
-      datasets: [{
-        data: [ [[${totalDoctors}]], [[${totalStaff}]], [[${totalPatients}]] ],
-        backgroundColor: ['#36b9cc', '#f6c23e', '#1cc88a']
-      }]
-    }
-  });
-</script>
+<script th:inline="javascript">
+    // Chart Config
+    const chartOptions = { responsive: true, maintainAspectRatio: false };
 
+    // Bar Chart
+    const ctxBar = document.getElementById('barChart');
+    if (ctxBar) {
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: [[${chartDates}]],
+                datasets: [{ label: 'Appointments', data: [[${chartCounts}]], backgroundColor: '#4e73df', borderRadius: 5 }]
+            },
+            options: { ...chartOptions, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    }
+
+    // Doughnut Chart
+    const ctxDoughnut = document.getElementById('doughnutChart');
+    if (ctxDoughnut) {
+        new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            data: {
+                labels: [[${chartModes}]],
+                datasets: [{ data: [[${chartModeCounts}]], backgroundColor: ['#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'] }]
+            },
+            options: chartOptions
+        });
+    }
+</script>
 </body>
 </html>
