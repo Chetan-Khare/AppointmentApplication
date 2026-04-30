@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
@@ -22,23 +23,28 @@ public class AuthController {
     // 1. Show Registration Form
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
-        model.addAttribute("user", new User());
-        return "register"; // Matches your register.html file name
+        model.addAttribute("user", new com.example.appointment.model.UserRegistrationDTO());
+        return "register";
     }
 
     // 2. Process Registration
     @PostMapping("/register/save")
-    public String registerUser(@ModelAttribute User user) {
-        // Encrypt the password before saving!
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Default role if not provided
-        if (user.getRole() == null) {
-            user.setRole("PATIENT");
+    public String registerUser(@ModelAttribute("user") com.example.appointment.model.UserRegistrationDTO registrationDto, RedirectAttributes ra) {
+        // 1. Check if email already exists
+        if (userRepository.findByEmail(registrationDto.getEmail()) != null) {
+            ra.addFlashAttribute("error", "Email already registered!");
+            return "redirect:/register";
         }
 
+        // 2. Map DTO to Entity and set default role
+        User user = new User();
+        user.setFullName(registrationDto.getFullName());
+        user.setEmail(registrationDto.getEmail());
+        user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
+        user.setRole("PATIENT"); // Hardcoded here to prevent mass assignment
+
         userRepository.save(user);
-        return "redirect:/register?success";
+        return "redirect:/login?success";
     }
 
 

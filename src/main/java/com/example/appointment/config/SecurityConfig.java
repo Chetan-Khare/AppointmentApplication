@@ -20,17 +20,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authenticationProvider(authenticationProvider()) // Connect the DB Service
-
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**","/api/**").disable())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .authenticationProvider(authenticationProvider())
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/**")) // Keep CSRF enabled for the rest
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // Better than disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/register/**", "/login", "/book", "/payment/**", "/receipt/**", "/display", "/css/**", "/js/**", "/ws-appointment/**", "/h2-console/**", "/error","/api/**").permitAll()
+                        // Public resources
+                        .requestMatchers("/", "/register/**", "/login", "/display", "/book", "/api/slots", "/css/**", "/js/**", "/ws-appointment/**", "/error", "/payment/**", "/receipt/**", "/api/payment/**").permitAll()
+                        
+                        // Role-specific access
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/doctor/**").hasRole("DOCTOR")
+                        .requestMatchers("/staff/**").hasRole("STAFF")
+                        
+                        // Shared/Authenticated
+                        .requestMatchers("/download/prescription/**").authenticated()
 
-                        // Doctor Only Pages
-                        .requestMatchers("/queue", "/appointments", "/start/**", "/complete/**", "/cancel/**", "/prescription/**").hasRole("DOCTOR")
+                        // H2 Console
+                        .requestMatchers("/h2-console/**").permitAll()
 
-                        // Everything else requires login
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

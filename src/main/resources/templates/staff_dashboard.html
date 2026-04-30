@@ -21,7 +21,9 @@
         </a>
         <div class="d-flex align-items-center gap-3">
             <span class="fw-bold text-dark" th:text="${staffName}">Staff Member</span>
-            <a href="/login" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</a>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</button>
+            </form>
         </div>
     </div>
 </nav>

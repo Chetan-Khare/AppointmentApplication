@@ -18,10 +18,22 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByPatientEmail(String patientEmail);
     List<Appointment> findByDateAndDoctorName(LocalDate date, String doctorName);
 
-    List<Appointment> findByStatus(String status);
     List<Appointment> findByDate(LocalDate date);
+    List<Appointment> findByStatus(String status);
+    List<Appointment> findByDateAndStatus(LocalDate date, String status);
+    
+    List<Appointment> findByDoctorNameContainingIgnoreCase(String doctorName);
 
-    List<Appointment> findByDateAndStatusNot(LocalDate date, String status);
+    Appointment findByPublicId(String publicId);
+    
+    long countByDateAndStatus(LocalDate date, String status);
+    
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.date = :date AND a.paymentStatus = 'PAID'")
+    long countPaidAppointmentsByDate(@Param("date") LocalDate date);
+
+    List<Appointment> findByStatusIn(List<String> statuses);
+
+    List<Appointment> findByDoctorNameIgnoreCaseAndPaymentStatusInAndStatusIn(String doctorName, List<String> paymentStatuses, List<String> statuses);
 
     // 1. Get count of appointments for each day (Used for Bar Chart)
     @Query("SELECT a.date, COUNT(a) FROM Appointment a WHERE a.date >= :startDate GROUP BY a.date ORDER BY a.date ASC")

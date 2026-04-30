@@ -48,11 +48,13 @@
                 <small class="text-success fw-bold" style="font-size: 0.75rem;">● System Online</small>
             </div>
 
-            <a href="/appointments" class="btn btn-call btn-sm">
+            <a href="/doctor/history" class="btn btn-call btn-sm">
                 <i class="bi bi-clock-history"></i> History
             </a>
 
-            <a href="/login" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</a>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</button>
+            </form>
         </div>
     </div>
     <div class="input-group shadow-sm" style="width: 115px; height: 28px;">
@@ -122,7 +124,7 @@
                             </div>
                             <div th:if="${a.paymentStatus != 'PAID'}">
                                 <span class="badge bg-danger rounded-pill mb-1">Unpaid</span>
-                                <a th:href="@{/markPaid/{id}(id=${a.id})}" class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm" style="font-size: 0.8rem;">
+                                <a th:href="@{/doctor/markPaid/{id}(id=${a.id})}" class="btn btn-outline-success btn-sm py-0 px-2 shadow-sm" style="font-size: 0.8rem;">
                                     <i class="bi bi-cash-coin"></i> Collect
                                 </a>
                             </div>
@@ -153,7 +155,7 @@
                                     <i class="bi bi-camera-video-fill"></i>
                                 </button>
 
-                                <a th:if="${a.status != 'COMPLETED'}" th:href="@{/cancel/{id}(id=${a.id})}" class="btn btn-sm btn-outline-danger ms-1">
+                                <a th:if="${a.status != 'COMPLETED'}" th:href="@{/doctor/cancel/{id}(id=${a.id})}" class="btn btn-sm btn-outline-danger ms-1">
                                     <i class="bi bi-x-circle"></i>
                                 </a>
                             </div>
@@ -165,7 +167,7 @@
                                             <h5 class="modal-title">Rx: <span th:text="${a.patientName}"></span></h5>
                                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                         </div>
-                                        <form action="/doctor/prescribe" method="post">
+                                        <form th:action="@{/doctor/prescribe}" method="post">
                                             <div class="modal-body text-start">
                                                 <input type="hidden" name="id" th:value="${a.id}">
                                                 <div class="mb-3">

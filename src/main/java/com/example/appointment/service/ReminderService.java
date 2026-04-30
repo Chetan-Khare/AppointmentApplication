@@ -10,15 +10,20 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 
 @Service
 public class ReminderService {
+    private static final Logger logger = LoggerFactory.getLogger(ReminderService.class);
 
     @Autowired private AppointmentRepository appointmentRepo;
     @Autowired private JavaMailSender mailSender;
 
     // --- 1. EXISTING: Daily Reminder (Tomorrow's Appts) ---
     @Scheduled(cron = "0 0 8 * * ?")
+    @Async
     public void sendDailyReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         List<Appointment> appointments = appointmentRepo.findByDate(tomorrow);
@@ -30,6 +35,7 @@ public class ReminderService {
 
     // --- 2. NEW: 1-Hour Before Reminder (Runs every 15 mins) ---
     @Scheduled(fixedRate = 900000)
+    @Async
     public void sendHourlyReminders() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
@@ -49,12 +55,14 @@ public class ReminderService {
 
     // --- 3. PUBLIC METHODS (For Controller to use) ---
 
+    @Async
     public void sendBookingConfirmation(Appointment appt) {
         sendEmail(appt.getPatientEmail(), "Booking Confirmed ✅",
                 "Hello " + appt.getPatientName() + ",\nYour appointment is confirmed for "
                         + appt.getDate() + " at " + appt.getTime() + ".\nToken: " + appt.getTokenNumber());
     }
 
+    @Async
     public void sendPrescription(Appointment appt, String notes) {
         sendEmail(appt.getPatientEmail(), "Prescription from Dr. " + appt.getDoctorName() + " 💊",
                 "Here is your prescription:\n\n" + notes + "\n\nGet well soon!");
@@ -67,9 +75,9 @@ public class ReminderService {
             message.setSubject(subject);
             message.setText(body);
             mailSender.send(message);
-            System.out.println("📧 Email sent to " + to);
+            logger.info("📧 Email sent to {}", to);
         } catch (Exception e) {
-            System.err.println("❌ Failed to send email: " + e.getMessage());
+            logger.error("❌ Failed to send email to {}: {}", to, e.getMessage());
         }
     }
 }

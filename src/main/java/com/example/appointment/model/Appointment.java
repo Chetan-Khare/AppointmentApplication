@@ -14,6 +14,9 @@ public class Appointment {
     private Long id;
     private String paymentMode; // "CASH" or "ONLINE"
     private String paymentStatus; // "PAID" or "PENDING"
+    
+    @Column(unique = true)
+    private String publicId;
 
     private String patientName;
     private String patientEmail; // ADDED THIS
@@ -78,4 +81,7 @@ public class Appointment {
 
     public int getTokenNumber() { return tokenNumber; }
     public void setTokenNumber(int tokenNumber) { this.tokenNumber = tokenNumber; }
+
+    public String getPublicId() { return publicId; }
+    public void setPublicId(String publicId) { this.publicId = publicId; }
 }

@@ -25,7 +25,9 @@
         </a>
         <div class="d-flex align-items-center gap-3">
             <span class="fw-bold text-dark" th:text="${adminName}">Administrator</span>
-            <a href="/login" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</a>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Logout</button>
+            </form>
         </div>
     </div>
 </nav>
@@ -277,7 +279,7 @@
 <div class="modal fade" id="addUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="/admin/add-user" method="post">
+            <form th:action="@{/admin/add-user}" method="post">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">Add New User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -315,7 +317,7 @@
 <div th:each="s : ${staffList}" class="modal fade" th:id="'leaveModal-' + ${s.id}" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="/admin/assign-leave" method="post">
+            <form th:action="@{/admin/assign-leave}" method="post">
                 <input type="hidden" name="userId" th:value="${s.id}">
                 <div class="modal-header">
                     <h5 class="modal-title">Assign Leave: <span th:text="${s.fullName}">User</span></h5>
@@ -347,8 +349,8 @@
         new Chart(ctxBar, {
             type: 'bar',
             data: {
-                labels: [[${chartDates}]],
-                datasets: [{ label: 'Appointments', data: [[${chartCounts}]], backgroundColor: '#4e73df', borderRadius: 5 }]
+                labels: /*[[${chartDates}]]*/ [],
+                datasets: [{ label: 'Appointments', data: /*[[${chartCounts}]]*/ [], backgroundColor: '#4e73df', borderRadius: 5 }]
             },
             options: { ...chartOptions, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
         });
@@ -360,8 +362,8 @@
         new Chart(ctxDoughnut, {
             type: 'doughnut',
             data: {
-                labels: [[${chartModes}]],
-                datasets: [{ data: [[${chartModeCounts}]], backgroundColor: ['#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'] }]
+                labels: /*[[${chartModes}]]*/ [],
+                datasets: [{ data: /*[[${chartModeCounts}]]*/ [], backgroundColor: ['#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'] }]
             },
             options: chartOptions
         });

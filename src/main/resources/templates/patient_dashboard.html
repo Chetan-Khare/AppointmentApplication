@@ -23,7 +23,9 @@
            <span class="me-3">
                Welcome, <span th:text="${user.fullName}" class="fw-bold">User</span>
            </span>
-            <a href="/logout" class="btn btn-sm btn-light text-primary fw-bold">Logout</a>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn btn-sm btn-light text-primary fw-bold border-0">Logout</button>
+            </form>
         </div>
     </div>
 </nav>
